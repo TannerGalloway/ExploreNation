@@ -1,0 +1,172 @@
+import React, { useRef, useState, useEffect } from "react";
+import {
+  Animated,
+  Text,
+  View,
+  StyleSheet,
+  TouchableHighlight,
+} from "react-native";
+import useFirstRender from "../utils/FirstRender";
+import { AntDesign } from "@expo/vector-icons";
+
+export default function Welcome() {
+  // Store array image index in state.
+  const [currentImageIndex1, setCurrentImageIndex1] = useState(0);
+  const [currentImageIndex2, setCurrentImageIndex2] = useState(0);
+
+  // Create 2 Animated Values for each image.
+  const imageOpacity1 = useRef(new Animated.Value(1));
+  const imageOpacity2 = useRef(new Animated.Value(1));
+
+  // Keeps track of what array the currently viewed image is from.
+  const activeArray = useRef(1);
+
+  // Check for first render
+  const firstRender = useFirstRender();
+
+  // 2 Arrays of Images
+  const images1 = [
+    require("../assets/images/hungary.jpg"),
+    require("../assets/images/desertroad.jpg"),
+    require("../assets/images/snowycabin.jpg"),
+    require("../assets/images/cityscape.jpg"),
+    require("../assets/images/mountains.jpg"),
+  ];
+
+  const images2 = [
+    require("../assets/images/coast.jpg"),
+    require("../assets/images/thaicoast.jpg"),
+    require("../assets/images/mtfuji.jpg"),
+    require("../assets/images/castle.jpg"),
+    require("../assets/images/canyon.jpg"),
+  ];
+
+  // Call the fade in fuction on a new re render when either CurrentImageIndex1 or 2 State Changes after 10 secs.
+  useEffect(() => {
+    if (!firstRender) {
+      activeArray.current == 0
+        ? (activeArray.current = 1)
+        : (activeArray.current = 0);
+    }
+    const delay = setTimeout(fadeOut, 10000);
+    return () => clearTimeout(delay);
+  }, [currentImageIndex1, currentImageIndex2]);
+
+  // Fade Out Function Animation
+  const fadeOut = () => {
+    // 2 Animations for both rendered images.
+    Animated.parallel([
+      Animated.timing(
+        // Target the correct image based on the active array image.
+        activeArray.current == 0
+          ? imageOpacity1.current
+          : imageOpacity2.current,
+        {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }
+      ),
+      Animated.timing(
+        activeArray.current == 1
+          ? imageOpacity1.current
+          : imageOpacity2.current,
+        {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }
+      ),
+    ]).start(() => {
+      // When the animation is finished, change the current image index based on the current array the faded out image was apart of.
+      activeArray.current == 0
+        ? setCurrentImageIndex1((currentImageIndex1 + 1) % images1.length)
+        : setCurrentImageIndex2((currentImageIndex2 + 1) % images2.length);
+    });
+  };
+
+  return (
+    <View style={styles.container}>
+      <Animated.Image
+        style={[styles.image, { opacity: imageOpacity1.current }]}
+        source={images1[currentImageIndex1]}
+      />
+      <Animated.Image
+        style={[styles.image, { opacity: imageOpacity2.current }]}
+        source={images2[currentImageIndex2]}
+      />
+      <View style={styles.bottomScreen}>
+        <Text style={[styles.textFormat, styles.heading]}>
+          Explore the Beauty of the World with just a tap.
+        </Text>
+        <Text style={[styles.textFormat, { fontSize: 18 }]}>
+          Discover the hidden gems around you with this app, your personal guide
+          to local adventures.
+        </Text>
+        <TouchableHighlight
+          style={styles.button}
+          underlayColor="#005e70"
+          onPress={() => {
+            alert("Redirect to Sign up Screen");
+          }}>
+          <View style={styles.buttonView}>
+            <Text style={styles.buttonText}>Get Started</Text>
+            <AntDesign
+              style={styles.icon}
+              name="arrowright"
+              size={24}
+              color="white"
+            />
+          </View>
+        </TouchableHighlight>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+  },
+  image: {
+    position: "absolute",
+    height: "100%",
+    width: "100%",
+  },
+  bottomScreen: {
+    flex: 1,
+    justifyContent: "flex-end",
+    marginLeft: 17,
+    marginRight: 17,
+  },
+  button: {
+    marginBottom: 20,
+    width: 335,
+    height: 61,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 100,
+    backgroundColor: "#59ABE3",
+  },
+  buttonText: {
+    color: "white",
+    fontFamily: "RalewayRegular",
+    fontSize: 18,
+  },
+  icon: {
+    position: "absolute",
+    top: 3,
+    left: 160,
+  },
+  textFormat: {
+    marginBottom: 40,
+    color: "white",
+    fontFamily: "RalewayMedium",
+  },
+  heading: {
+    fontSize: 38,
+    width: 268,
+    marginBottom: 15,
+  },
+});

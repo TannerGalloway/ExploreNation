@@ -1,20 +1,18 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import Welcome from "./screens/Welcome";
+import { useFonts } from "expo-font";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  // Load Fonts
+  const [loaded] = useFonts({
+    RalewayRegular: require("./assets/fonts/Raleway-Regular.ttf"),
+    RalewayMedium: require("./assets/fonts/Raleway-Medium.ttf"),
+    RalewaySemiBold: require("./assets/fonts/Raleway-SemiBold.ttf"),
+    RalewayBold: require("./assets/fonts/Raleway-SemiBold.ttf"),
+  });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  if (!loaded) {
+    return null;
+  }
+
+  return <Welcome />;
+}
