@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Animated,
   Text,
@@ -7,9 +7,8 @@ import {
   TouchableHighlight,
 } from "react-native";
 import useFirstRender from "../utils/FirstRender";
-import { AntDesign } from "@expo/vector-icons";
 
-export default function Welcome() {
+export default function Welcome({ navigation }) {
   // Store array image index in state.
   const [currentImageIndex1, setCurrentImageIndex1] = useState(0);
   const [currentImageIndex2, setCurrentImageIndex2] = useState(0);
@@ -43,7 +42,7 @@ export default function Welcome() {
 
   // Call the fade in fuction on a new re render when either CurrentImageIndex1 or 2 State Changes after 10 secs.
   useEffect(() => {
-    if (!firstRender) {
+    if (firstRender) {
       activeArray.current == 0
         ? (activeArray.current = 1)
         : (activeArray.current = 0);
@@ -100,25 +99,31 @@ export default function Welcome() {
           Explore the Beauty of the World with just a tap.
         </Text>
         <Text style={[styles.textFormat, { fontSize: 18 }]}>
-          Discover the hidden gems around you with this app, your personal guide
-          to local adventures.
+          Discover popular attractions & hidden gems around you with ease, your
+          personal guide to local adventures.
         </Text>
-        <TouchableHighlight
-          style={styles.button}
-          underlayColor="#005e70"
-          onPress={() => {
-            alert("Redirect to Sign up Screen");
-          }}>
-          <View style={styles.buttonView}>
-            <Text style={styles.buttonText}>Get Started</Text>
-            <AntDesign
-              style={styles.icon}
-              name="arrowright"
-              size={24}
-              color="white"
-            />
-          </View>
-        </TouchableHighlight>
+        <View style={styles.buttonsView}>
+          <TouchableHighlight
+            style={[styles.button, { backgroundColor: "#00a8da" }]}
+            underlayColor="#005e70"
+            onPress={() => {
+              navigation.replace("Register");
+            }}>
+            <View>
+              <Text style={styles.buttonText}>Register</Text>
+            </View>
+          </TouchableHighlight>
+          <TouchableHighlight
+            style={[styles.button, { backgroundColor: "#101d23" }]}
+            underlayColor="#0A1317"
+            onPress={() => {
+              navigation.replace("Login");
+            }}>
+            <View>
+              <Text style={styles.buttonText}>Login</Text>
+            </View>
+          </TouchableHighlight>
+        </View>
       </View>
     </View>
   );
@@ -128,42 +133,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
+    backgroundColor: "#101d23",
   },
+
   image: {
     position: "absolute",
     height: "100%",
     width: "100%",
   },
+
   bottomScreen: {
     flex: 1,
     justifyContent: "flex-end",
-    marginLeft: 17,
-    marginRight: 17,
+    margin: 17,
   },
+
+  buttonsView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
   button: {
     marginBottom: 20,
-    width: 335,
+    width: 150,
     height: 61,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 100,
-    backgroundColor: "#59ABE3",
   },
+
   buttonText: {
     color: "white",
-    fontFamily: "RalewayRegular",
-    fontSize: 18,
+    fontFamily: "RalewayBold",
+    fontSize: 16,
   },
-  icon: {
-    position: "absolute",
-    top: 3,
-    left: 160,
-  },
+
   textFormat: {
     marginBottom: 40,
     color: "white",
     fontFamily: "RalewayMedium",
   },
+
   heading: {
     fontSize: 38,
     width: 268,
