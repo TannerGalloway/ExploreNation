@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
   Image,
+  ImageBackground,
   StyleSheet,
   TouchableWithoutFeedback,
   useWindowDimensions,
@@ -11,16 +12,213 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { supabase } from "../utils/supabaseClient";
-import { Avatar, ListItem } from "@rneui/themed";
+import { Avatar, ListItem, Button } from "@rneui/themed";
 import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
+import * as Location from "expo-location";
 
 export default function Home() {
-  const bottomSheetRef = useRef(null);
+  const bottomSheetRef = useRef();
   const [modalVisable, setModalVisable] = useState(false);
+  const [cityData, setcityData] = useState([]);
+  const [attractionData, setAttractionData] = useState([]);
+  const [cityLoading, setCityLoading] = useState(true);
+  const [attLoading, setAttLoading] = useState(true);
+  const [LocationErrorMsg, setLocationErrorMsg] = useState();
   const snapPoints = ["21%"];
+
+  const getCountryandCityInfo = async () => {
+    let cityInfo = [];
+    let imgRefIndex = 0;
+    try {
+      const countryResponse = await fetch(
+        "https://countriesnow.space/api/v0.1/countries"
+      );
+      const countryData = await countryResponse.json();
+
+      // Randomly Select 6 coutries and cities. Ignoring any countries that contains no cities.
+      for (let i = 0; i < 6; i++) {
+        let randCountryDataIndex = genRandNum(countryData.data.length - 1);
+
+        while (countryData.data[randCountryDataIndex].cities.length === 0) {
+          randCountryDataIndex = genRandNum(countryData.data.length - 1);
+        }
+
+        let randCityDataIndex = genRandNum(
+          countryData.data[randCountryDataIndex].cities.length - 1
+        );
+
+        let selectedCity = `${countryData.data[randCountryDataIndex].cities[randCityDataIndex]}, ${countryData.data[randCountryDataIndex].country}`;
+
+        // Get city image ref ID
+        const imageRefResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${selectedCity}&inputtype=textquery&fields=photos&key=${GOOGLE_PLACES_API_KEY}`
+        );
+        const imgResData = await imageRefResponse.json();
+
+        // Check returned data for errors otherwise push data to the cityInfo array.
+        if (
+          isResponseObjEmpty(imgResData.candidates).status ||
+          imgResData.status == "ZERO_RESULTS"
+        ) {
+          cityInfo.push({
+            city: selectedCity,
+            image: require("../assets/images/error_loading.jpg"),
+          });
+        } else {
+          // If the data returned contains more than 1 images, randomly select 1 of the images and check for empty data before selecting a data index.
+          if (imgResData.candidates.length > 1) {
+            imgRefIndex = genRandNum(imgResData.candidates.length - 1);
+
+            while (
+              isResponseObjEmpty(imgResData.candidates).indexes.includes(
+                imgRefIndex
+              )
+            ) {
+              imgRefIndex = genRandNum(imgResData.candidates.length - 1);
+            }
+          }
+
+          // Get the city image using the ref ID from the previous call.
+          const cityImage = await fetch(
+            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${imgResData.candidates[imgRefIndex].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
+          );
+
+          cityInfo.push({
+            city: selectedCity,
+            image: { uri: cityImage.url },
+          });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    setcityData(cityInfo);
+    setCityLoading(false);
+  };
+
+  // Check if is an empty object in the Response.
+  const isResponseObjEmpty = (objectName) => {
+    let emptyIndexes = [];
+    for (let i = 0; i < objectName.length; i++) {
+      if (Object.keys(objectName[i]).length == 0) {
+        emptyIndexes.push(i);
+      }
+    }
+    if (emptyIndexes.length > 0) {
+      return { status: true, indexes: emptyIndexes };
+    } else {
+      return false;
+    }
+  };
+
+  // Generate a random number with the limit of parameter given
+  const genRandNum = (limit) => {
+    return Math.floor(Math.random() * limit);
+  };
+
+  const getLocation = async () => {
+    let attractionInfo = [];
+
+    // Ask for location permission
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      setLocationErrorMsg("Make sure your Location Services are turned on.");
+      return;
+    }
+
+    // Get the user's current location if user accepts the location propmpt.
+    let position = await Location.getCurrentPositionAsync({});
+
+    try {
+      // Get Nearby Attractions that are labled as tourist attractions and fall into a circle with a radius of 10 miles centered around the user's current location.
+      const nearbyAttrationsResponse = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${`${position.coords.latitude},${position.coords.longitude}`}&radius=16093&type=tourist_attraction&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      const attractionResponse = await nearbyAttrationsResponse.json();
+
+      if (attractionResponse.status != "OK") {
+        attractionInfo.push({
+          name: "Error",
+          rating: 0,
+          total_reviews: 0,
+          image: require("../assets/images/error_loading.jpg"),
+        });
+      } else {
+        // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews and image of the attraction.
+        for (let i = 0; i < attractionResponse.results.length; i++) {
+          const attImageResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
+          );
+          attractionInfo.push({
+            name: attractionResponse.results[i].name,
+            rating: attractionResponse.results[i].rating,
+            total_reviews: attractionResponse.results[i].user_ratings_total,
+            image: { uri: attImageResponse.url },
+          });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setAttractionData(attractionInfo);
+    setAttLoading(false);
+  };
+
+  // City card design
+  const cityItem = ({ item }) => (
+    <View style={[styles.citiesView, styles.backdropBorder]}>
+      <Image
+        style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]}
+        source={item.image}
+      />
+      <View style={styles.cityNameView}>
+        <FontAwesome
+          name="map-marker"
+          size={18}
+          color="#00A8DA"
+          style={{ marginTop: 10 }}
+        />
+        <Text style={styles.homeResultsHeading}>{item.city}</Text>
+      </View>
+    </View>
+  );
+
+  // Attraction card design
+  const attractionItem = ({ item }) => (
+    <ImageBackground
+      style={[
+        styles.attImgPreview,
+        { width: useWindowDimensions.width > 755 ? 150 : 140 },
+      ]}
+      imageStyle={[
+        styles.backdropBorder,
+        {
+          borderColor: "white",
+          borderWidth: 1,
+        },
+      ]}
+      source={item.image}>
+      <View style={styles.attractionTextView}>
+        <Text style={styles.attractionText}>{`${item.name}`}</Text>
+        <View style={{ flexDirection: "row" }}>
+          <FontAwesome
+            name="star"
+            size={13}
+            color="#f3cc4b"
+            style={{ marginTop: 3, marginRight: 3 }}
+          />
+          <Text
+            style={{
+              color: "#d3d3d3",
+            }}>{`${item.rating} (${item.total_reviews})`}</Text>
+        </View>
+      </View>
+    </ImageBackground>
+  );
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -46,111 +244,10 @@ export default function Home() {
     Keyboard.dismiss();
   };
 
-  const cityData = [
-    {
-      image: "https://picsum.photos/id/49/100",
-      city: "Patras, Greece",
-    },
-    {
-      image: "https://picsum.photos/id/234/100",
-      city: "Paris, France",
-    },
-    {
-      image: "https://picsum.photos/id/351/100",
-      city: "Taipei, Taiwan",
-    },
-    {
-      image: "https://picsum.photos/id/369/100",
-      city: "Venice, Italy",
-    },
-    {
-      image: "https://picsum.photos/id/392/100",
-      city: "San Francisco, USA",
-    },
-  ];
-
-  const attractionData = [
-    {
-      image: "https://picsum.photos/id/142/70",
-      name: "Balmoral Castle",
-      city: "Scotland, UK",
-      distance: "3.5km",
-    },
-    {
-      image: "https://picsum.photos/id/218/70",
-      name: "Ko Samui",
-      city: "Pattaya, Thailand",
-      distance: "4.2km",
-    },
-    {
-      image: "https://picsum.photos/id/274/70",
-      name: "Time Square",
-      city: "New York, USA",
-      distance: "1.8km",
-    },
-    {
-      image: "https://picsum.photos/id/318/70",
-      name: "Eiffel Tower",
-      city: "Paris, France",
-      distance: "10km",
-    },
-    {
-      image: "https://picsum.photos/id/512/70",
-      name: "Blue Lagoon",
-      city: "Reykjanes, Iceland",
-      distance: "0.5km",
-    },
-  ];
-
-  const cityItem = ({ item }) => (
-    <View style={[styles.citiesView, styles.backdropBorder]}>
-      <Image
-        style={[styles.imgPreview, styles.backdropBorder]}
-        source={{
-          uri: item.image,
-        }}
-      />
-      <View style={styles.cityNameView}>
-        <FontAwesome
-          name="map-marker"
-          size={18}
-          color="#00A8DA"
-          style={{ marginTop: 10 }}
-        />
-        <Text style={styles.homeResultsHeading}>{item.city}</Text>
-      </View>
-    </View>
-  );
-
-  const attractionItem = ({ item }) => (
-    <View style={{ flexDirection: "row" }}>
-      <Image
-        style={[styles.imgPreview, styles.attImgPreview, styles.backdropBorder]}
-        source={{
-          uri: item.image,
-        }}
-      />
-      <View style={{ marginTop: 20, flex: 1 }}>
-        <Text style={styles.homeResultsHeading}>{item.name}</Text>
-        <View style={{ flexDirection: "row" }}>
-          <FontAwesome
-            name="map-marker"
-            size={14}
-            color="#00A8DA"
-            style={{ marginTop: 10, marginLeft: 7 }}
-          />
-          <Text style={styles.citySubHeading}>{item.city}</Text>
-        </View>
-      </View>
-      <Text
-        style={[
-          styles.homeResultsHeading,
-          { justifyContent: "flex-end", marginTop: 25 },
-        ]}>
-        {item.distance}
-      </Text>
-    </View>
-  );
+  useEffect(() => {
+    getCountryandCityInfo();
+    getLocation();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -247,32 +344,58 @@ export default function Home() {
       </View>
 
       {/* Cities View */}
-      <Text style={styles.sectionHeading}>Explore Cities</Text>
-      <FlatList
-        data={cityData}
-        renderItem={cityItem}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        ListEmptyComponent={
-          <Text style={styles.noData}>No Cities Found to Explore.</Text>
-        }
-      />
+      <View>
+        <Text style={styles.sectionHeading}>Cities to Explore</Text>
+        {cityLoading ? (
+          <Button
+            type="clear"
+            disabled={true}
+            loading={true}
+            loadingProps={{
+              size: "large",
+            }}
+          />
+        ) : (
+          <FlatList
+            data={cityData}
+            renderItem={cityItem}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            ListEmptyComponent={
+              <Text style={styles.noData}>
+                Unable to Find Cities to Explore.
+              </Text>
+            }
+          />
+        )}
+      </View>
 
       {/* Nearby Attractions */}
-      <View
-        style={[
-          styles.attractionBackground,
-          { height: useWindowDimensions().height > 755 ? 275 : 223 },
-        ]}>
+      <View>
         <Text style={styles.sectionHeading}>Nearby Attractions</Text>
-        <FlatList
-          data={attractionData}
-          renderItem={attractionItem}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <Text style={styles.noData}>No Attractions Found Nearby.</Text>
-          }
-        />
+        {attLoading ? (
+          <Button
+            type="clear"
+            disabled={true}
+            loading={true}
+            loadingProps={{
+              size: "large",
+            }}
+          />
+        ) : (
+          <FlatList
+            contentContainerStyle={{ paddingBottom: 500 }}
+            data={attractionData}
+            renderItem={attractionItem}
+            showsVerticalScrollIndicator={false}
+            numColumns={2}
+            ListEmptyComponent={
+              <Text style={styles.noData}>
+                No Attractions Found Nearby. {LocationErrorMsg}
+              </Text>
+            }
+          />
+        )}
       </View>
 
       {/* Account Icon Modal */}
@@ -344,29 +467,21 @@ const styles = StyleSheet.create({
 
   citiesView: {
     backgroundColor: "#252B34",
-    height: 150,
     width: 130,
-    marginRight: 20,
+    marginRight: 18,
   },
 
   homeResultsHeading: {
     fontFamily: "RalewayBold",
+    fontSize: 13,
     color: "white",
     marginTop: 7,
-    paddingLeft: 7,
-  },
-
-  citySubHeading: {
-    fontFamily: "RalewayRegular",
-    color: "#919196",
-    marginTop: 7,
-    paddingLeft: 7,
+    paddingHorizontal: 7,
   },
 
   cityNameView: {
     flexDirection: "row",
-    paddingLeft: 7,
-    paddingRight: 7,
+    paddingHorizontal: 7,
     paddingBottom: 7,
   },
 
@@ -376,15 +491,19 @@ const styles = StyleSheet.create({
 
   imgPreview: {
     height: 100,
+    width: 130,
+  },
+
+  cityImgBorder: {
     borderColor: "white",
     borderWidth: 1,
   },
 
   attImgPreview: {
-    height: 70,
-    width: 70,
-    marginVertical: 10,
-    marginRight: 7,
+    marginBottom: 15,
+    marginRight: 30,
+    justifyContent: "flex-end",
+    height: 130,
   },
 
   ListItemContainer: {
@@ -398,20 +517,23 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
 
-  attractionBackground: {
-    backgroundColor: "#252B34",
-    marginTop: 18,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingLeft: 12,
-    paddingRight: 12,
+  attractionTextView: {
+    backgroundColor: "rgba(52, 52, 52, 0.6)",
+    paddingHorizontal: 5,
+    paddingBottom: 3,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+
+  attractionText: {
+    fontFamily: "RalewayBold",
+    fontSize: 13,
+    color: "white",
   },
 
   noData: {
-    height: 100,
     fontFamily: "RalewayBold",
     color: "white",
-    marginTop: 20,
   },
 
   overlay: {
