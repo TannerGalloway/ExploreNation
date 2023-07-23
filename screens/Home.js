@@ -19,7 +19,7 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import * as Location from "expo-location";
 
-export default function Home() {
+export default function Home({ navigation }) {
   const bottomSheetRef = useRef();
   const [modalVisable, setModalVisable] = useState(false);
   const [cityData, setcityData] = useState([]);
@@ -33,9 +33,7 @@ export default function Home() {
     let cityInfo = [];
     let imgRefIndex = 0;
     try {
-      const countryResponse = await fetch(
-        "https://countriesnow.space/api/v0.1/countries"
-      );
+      const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries");
       const countryData = await countryResponse.json();
 
       // Randomly Select 6 coutries and cities. Ignoring any countries that contains no cities.
@@ -46,9 +44,7 @@ export default function Home() {
           randCountryDataIndex = genRandNum(countryData.data.length - 1);
         }
 
-        let randCityDataIndex = genRandNum(
-          countryData.data[randCountryDataIndex].cities.length - 1
-        );
+        let randCityDataIndex = genRandNum(countryData.data[randCountryDataIndex].cities.length - 1);
 
         let selectedCity = `${countryData.data[randCountryDataIndex].cities[randCityDataIndex]}, ${countryData.data[randCountryDataIndex].country}`;
 
@@ -59,10 +55,7 @@ export default function Home() {
         const imgResData = await imageRefResponse.json();
 
         // Check returned data for errors otherwise push data to the cityInfo array.
-        if (
-          isResponseObjEmpty(imgResData.candidates).status ||
-          imgResData.status == "ZERO_RESULTS"
-        ) {
+        if (isResponseObjEmpty(imgResData.candidates).status || imgResData.status == "ZERO_RESULTS") {
           cityInfo.push({
             city: selectedCity,
             image: require("../assets/images/error_loading.jpg"),
@@ -72,11 +65,7 @@ export default function Home() {
           if (imgResData.candidates.length > 1) {
             imgRefIndex = genRandNum(imgResData.candidates.length - 1);
 
-            while (
-              isResponseObjEmpty(imgResData.candidates).indexes.includes(
-                imgRefIndex
-              )
-            ) {
+            while (isResponseObjEmpty(imgResData.candidates).indexes.includes(imgRefIndex)) {
               imgRefIndex = genRandNum(imgResData.candidates.length - 1);
             }
           }
@@ -100,7 +89,7 @@ export default function Home() {
     setCityLoading(false);
   };
 
-  // Check if is an empty object in the Response.
+  // Check if there is an empty object in the Response.
   const isResponseObjEmpty = (objectName) => {
     let emptyIndexes = [];
     for (let i = 0; i < objectName.length; i++) {
@@ -115,13 +104,14 @@ export default function Home() {
     }
   };
 
-  // Generate a random number with the limit of parameter given
+  // Generate a random number with the limit being the parameter given.
   const genRandNum = (limit) => {
     return Math.floor(Math.random() * limit);
   };
 
   const getLocation = async () => {
     let attractionInfo = [];
+    let attLocation = "";
 
     // Ask for location permission
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -142,22 +132,35 @@ export default function Home() {
 
       if (attractionResponse.status != "OK") {
         attractionInfo.push({
-          name: "Error",
+          name: "Unknown",
           rating: 0,
           total_reviews: 0,
           image: require("../assets/images/error_loading.jpg"),
+          location: "Unknown",
         });
       } else {
-        // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews and image of the attraction.
+        // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews, thumbnail, location(latitude, longitude, city) and attraction id.
+
         for (let i = 0; i < attractionResponse.results.length; i++) {
           const attImageResponse = await fetch(
             `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
           );
+
+          const locationCode = attractionResponse.results[i].plus_code;
+
+          // Get the Location of the Attraction from the retuned plus code, otherwise get the location from the vicinity address returned.
+          locationCode == undefined
+            ? (attLocation = attractionResponse.results[i].vicinity.substring(attractionResponse.results[i].vicinity.lastIndexOf(",") + 2))
+            : (attLocation = locationCode.compound_code.substring(locationCode.compound_code.search(" ") + 1));
+
           attractionInfo.push({
             name: attractionResponse.results[i].name,
             rating: attractionResponse.results[i].rating,
             total_reviews: attractionResponse.results[i].user_ratings_total,
-            image: { uri: attImageResponse.url },
+            thumbnail: { uri: attImageResponse.url },
+            location: attLocation,
+            latlng: attractionResponse.results[i].geometry.location,
+            place_id: attractionResponse.results[i].place_id != "NOT_FOUND" ? attractionResponse.results[i].place_id : "NOT_FOUND",
           });
         }
       }
@@ -171,17 +174,9 @@ export default function Home() {
   // City card design
   const cityItem = ({ item }) => (
     <View style={[styles.citiesView, styles.backdropBorder]}>
-      <Image
-        style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]}
-        source={item.image}
-      />
+      <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.image} />
       <View style={styles.cityNameView}>
-        <FontAwesome
-          name="map-marker"
-          size={18}
-          color="#00A8DA"
-          style={{ marginTop: 10 }}
-        />
+        <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
         <Text style={styles.homeResultsHeading}>{item.city}</Text>
       </View>
     </View>
@@ -189,35 +184,39 @@ export default function Home() {
 
   // Attraction card design
   const attractionItem = ({ item }) => (
-    <ImageBackground
-      style={[
-        styles.attImgPreview,
-        { width: useWindowDimensions.width > 755 ? 150 : 140 },
-      ]}
-      imageStyle={[
-        styles.backdropBorder,
-        {
-          borderColor: "white",
-          borderWidth: 1,
-        },
-      ]}
-      source={item.image}>
-      <View style={styles.attractionTextView}>
-        <Text style={styles.attractionText}>{`${item.name}`}</Text>
-        <View style={{ flexDirection: "row" }}>
-          <FontAwesome
-            name="star"
-            size={13}
-            color="#f3cc4b"
-            style={{ marginTop: 3, marginRight: 3 }}
-          />
-          <Text
-            style={{
-              color: "#d3d3d3",
-            }}>{`${item.rating} (${item.total_reviews})`}</Text>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        navigation.navigate("AttractionDetails", {
+          name: item.name,
+          rating: item.rating,
+          location: item.location,
+          place_id: item.place_id,
+          thumbnail: item.thumbnail,
+          latlng: item.latlng,
+        });
+      }}>
+      <ImageBackground
+        style={[styles.attImgPreview, { width: useWindowDimensions.width > 755 ? 150 : 140 }]}
+        imageStyle={[
+          styles.backdropBorder,
+          {
+            borderColor: "white",
+            borderWidth: 1,
+          },
+        ]}
+        source={item.thumbnail}>
+        <View style={styles.attractionTextView}>
+          <Text style={styles.attractionText}>{`${item.name}`}</Text>
+          <View style={{ flexDirection: "row" }}>
+            <FontAwesome name="star" size={13} color="#f3cc4b" style={{ marginTop: 3, marginRight: 6 }} />
+            <Text
+              style={{
+                color: "#d3d3d3",
+              }}>{`${item.rating} (${item.total_reviews})`}</Text>
+          </View>
         </View>
-      </View>
-    </ImageBackground>
+      </ImageBackground>
+    </TouchableWithoutFeedback>
   );
 
   const handleSignOut = async () => {
@@ -251,9 +250,7 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {modalVisable ? (
-        <TouchableOpacity style={styles.overlay} onPress={handleCloseModal} />
-      ) : null}
+      {modalVisable ? <TouchableOpacity style={styles.overlay} onPress={handleCloseModal} /> : null}
       <View style={styles.topElements}>
         {/* Top Left View */}
         <View>
@@ -266,9 +263,7 @@ export default function Home() {
           <Avatar
             size={54}
             rounded
-            renderPlaceholderContent={
-              <FontAwesome name="user-circle" size={44} color="white" />
-            }
+            renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color="white" />}
             onPress={toggleModal}
             source={{
               uri: "https://randomuser.me/api/portraits/men/36.jpg",
@@ -296,12 +291,7 @@ export default function Home() {
           fetchDetails={true}
           renderRow={(rowData) => (
             <View style={{ flexDirection: "row" }}>
-              <FontAwesome
-                name="map-marker"
-                size={18}
-                color="#00A8DA"
-                style={{ paddingRight: 10 }}
-              />
+              <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ paddingRight: 10 }} />
               <Text style={{ color: "white" }}>{rowData.description}</Text>
             </View>
           )}
@@ -361,11 +351,7 @@ export default function Home() {
             renderItem={cityItem}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
-            ListEmptyComponent={
-              <Text style={styles.noData}>
-                Unable to Find Cities to Explore.
-              </Text>
-            }
+            ListEmptyComponent={<Text style={styles.noData}>Unable to Find Cities to Explore.</Text>}
           />
         )}
       </View>
@@ -389,28 +375,19 @@ export default function Home() {
             renderItem={attractionItem}
             showsVerticalScrollIndicator={false}
             numColumns={2}
-            ListEmptyComponent={
-              <Text style={styles.noData}>
-                No Attractions Found Nearby. {LocationErrorMsg}
-              </Text>
-            }
+            ListEmptyComponent={<Text style={styles.noData}>No Attractions Found Nearby. {LocationErrorMsg}</Text>}
           />
         )}
       </View>
 
       {/* Account Icon Modal */}
-      <BottomSheetModal
-        ref={bottomSheetRef}
-        snapPoints={snapPoints}
-        backgroundStyle={styles.ListItemContainer}>
+      <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints} backgroundStyle={styles.ListItemContainer}>
         <View>
           <TouchableWithoutFeedback onPress={() => console.log("Settings")}>
             <ListItem containerStyle={styles.ListItemContainer}>
               <Feather name="settings" size={25} color="white" />
               <ListItem.Content>
-                <ListItem.Title style={styles.ListItemText}>
-                  Settings
-                </ListItem.Title>
+                <ListItem.Title style={styles.ListItemText}>Settings</ListItem.Title>
               </ListItem.Content>
             </ListItem>
           </TouchableWithoutFeedback>
@@ -418,9 +395,7 @@ export default function Home() {
             <ListItem containerStyle={styles.ListItemContainer}>
               <MaterialIcons name="logout" size={25} color="white" />
               <ListItem.Content>
-                <ListItem.Title style={styles.ListItemText}>
-                  Log Out
-                </ListItem.Title>
+                <ListItem.Title style={styles.ListItemText}>Log Out</ListItem.Title>
               </ListItem.Content>
             </ListItem>
           </TouchableWithoutFeedback>

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { TouchableWithoutFeedback } from "react-native";
 import { useFonts } from "expo-font";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./utils/supabaseClient";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { FontAwesome5, Entypo } from "@expo/vector-icons";
 import "react-native-gesture-handler";
 import Welcome from "./screens/Welcome";
 import Login from "./screens/Login";
@@ -12,6 +14,7 @@ import ForgotPassword from "./screens/ForgotPassword";
 import ResetPassword from "./screens/ResetPassword";
 import CheckEmail from "./screens/CheckEmail";
 import BottomTabs from "./screens/BottomTabs";
+import AttractionDetails from "./screens/AttractionDetails";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -71,6 +74,40 @@ export default function App() {
                 component={BottomTabs}
                 options={{
                   animationTypeForReplace: session ? "push" : "pop",
+                }}
+              />
+              <Stack.Screen
+                name="AttractionDetails"
+                component={AttractionDetails}
+                options={{
+                  headerShown: true,
+                  title: "",
+                  headerStyle: {
+                    backgroundColor: "#101d23",
+                  },
+                  headerTintColor: "#fff",
+                  headerShadowVisible: false,
+                  headerRight: () => (
+                    <>
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          console.log("Liked");
+                        }}>
+                        <FontAwesome5 name="heart" size={24} color="white" />
+                      </TouchableWithoutFeedback>
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          console.log("Shared");
+                        }}>
+                        <Entypo
+                          name="share"
+                          style={{ marginLeft: 35, marginRight: 10 }}
+                          size={24}
+                          color="white"
+                        />
+                      </TouchableWithoutFeedback>
+                    </>
+                  ),
                 }}
               />
             </>
