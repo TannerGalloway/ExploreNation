@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Pressable,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-} from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
 import { Button } from "@rneui/themed";
 import { Formik } from "formik";
 import * as Yup from "yup";
@@ -19,7 +11,7 @@ const validationSchema = Yup.object({
 });
 
 export default function ForgotPassword({ navigation }) {
-  let email_icon = require("../assets/images/email_icon.png");
+  const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
 
   const handleSubmit = (values) => {
@@ -34,27 +26,15 @@ export default function ForgotPassword({ navigation }) {
       validationSchema={validationSchema}
       validateOnChange={false}
       onSubmit={handleSubmit}>
-      {({
-        handleChange,
-        handleSubmit,
-        handleBlur,
-        values,
-        errors,
-        isValid,
-        isSubmitting,
-      }) => (
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior="position"
-          keyboardVerticalOffset={-280}>
+      {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
+        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-280}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
           <View>
             <Text style={styles.heading}>Forgot your Password?</Text>
             <Text style={styles.subheading}>
-              Enter the Email associated with your account and we'll get you
-              back to Exploring.
+              Enter the Email associated with your account and we'll get you back to Exploring.
             </Text>
           </View>
 
@@ -80,16 +60,12 @@ export default function ForgotPassword({ navigation }) {
 
             {/* Sign In & Sign Up Screen Link */}
             <View style={styles.footer}>
-              <Text style={styles.accountMessage}>
-                Remembered your Password?
-              </Text>
+              <Text style={styles.accountMessage}>Remembered your Password?</Text>
               <Pressable
                 onPress={() => {
                   navigation.replace("Login");
                 }}>
-                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>
-                  Login
-                </Text>
+                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>Login</Text>
               </Pressable>
             </View>
           </View>

@@ -99,12 +99,7 @@ export default function App() {
                         onPress={() => {
                           console.log("Shared");
                         }}>
-                        <Entypo
-                          name="share"
-                          style={{ marginLeft: 35, marginRight: 10 }}
-                          size={24}
-                          color="white"
-                        />
+                        <Entypo name="share" style={{ marginLeft: 35, marginRight: 10 }} size={24} color="white" />
                       </TouchableWithoutFeedback>
                     </>
                   ),

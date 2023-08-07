@@ -20,14 +20,7 @@ export default function EmailInput({ value, onChangeText, onBlur, error }) {
         errorMessage={error}
         selectionColor="white"
         cursorColor="white"
-        leftIcon={
-          <MaterialIcons
-            style={{ paddingTop: 4 }}
-            name="email"
-            size={24}
-            color="white"
-          />
-        }
+        leftIcon={<MaterialIcons style={{ paddingTop: 4 }} name="email" size={24} color="white" />}
       />
     </View>
   );

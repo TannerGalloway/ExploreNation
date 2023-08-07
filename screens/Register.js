@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Pressable,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-} from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button } from "@rneui/themed";
@@ -33,7 +25,7 @@ const validationSchema = Yup.object({
 });
 
 export default function Register({ navigation }) {
-  let email_icon = require("../assets/images/email_icon.png");
+  const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
 
   // Submit form to server.
@@ -57,27 +49,14 @@ export default function Register({ navigation }) {
       validationSchema={validationSchema}
       validateOnChange={false}
       onSubmit={handleSubmit}>
-      {({
-        handleChange,
-        handleSubmit,
-        handleBlur,
-        values,
-        errors,
-        isValid,
-        isSubmitting,
-      }) => (
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior="position"
-          keyboardVerticalOffset={-92}>
+      {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
+        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-92}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
           <View>
             <Text style={styles.heading}>Begin your Journey</Text>
-            <Text style={styles.subheading}>
-              You're 1 step closer to Adventure.
-            </Text>
+            <Text style={styles.subheading}>You're 1 step closer to Adventure.</Text>
           </View>
 
           <EmailInput
@@ -124,16 +103,12 @@ export default function Register({ navigation }) {
 
             {/* Sign In & Sign Up Screen Link */}
             <View style={styles.footer}>
-              <Text style={styles.accountMessage}>
-                Already have an Account?
-              </Text>
+              <Text style={styles.accountMessage}>Already have an Account?</Text>
               <Pressable
                 onPress={() => {
                   navigation.replace("Login");
                 }}>
-                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>
-                  Login
-                </Text>
+                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>Login</Text>
               </Pressable>
             </View>
           </View>

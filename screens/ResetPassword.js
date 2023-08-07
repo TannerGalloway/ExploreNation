@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  BackHandler,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-} from "react-native";
+import { View, Text, Image, StyleSheet, BackHandler, TouchableOpacity, KeyboardAvoidingView } from "react-native";
 import { Button } from "@rneui/themed";
 import { Formik } from "formik";
 import * as Yup from "yup";
@@ -29,17 +21,14 @@ const validationSchema = Yup.object({
 });
 
 export default function ResetPassword() {
-  let email_icon = require("../assets/images/email_icon.png");
+  const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
 
   // Disable Back Button
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        return true;
-      }
-    );
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      return true;
+    });
 
     return () => backHandler.remove();
   }, []);
@@ -56,27 +45,14 @@ export default function ResetPassword() {
       validationSchema={validationSchema}
       validateOnChange={false}
       onSubmit={handleSubmit}>
-      {({
-        handleChange,
-        handleSubmit,
-        handleBlur,
-        values,
-        errors,
-        isValid,
-        isSubmitting,
-      }) => (
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior="position"
-          keyboardVerticalOffset={-157}>
+      {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
+        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-157}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
           <View>
             <Text style={styles.heading}>Reset Password</Text>
-            <Text style={styles.subheading}>
-              Adventure awaits! Enter your new password to continue Exploring.
-            </Text>
+            <Text style={styles.subheading}>Adventure awaits! Enter your new password to continue Exploring.</Text>
           </View>
 
           {/* Password */}
@@ -132,10 +108,6 @@ const styles = StyleSheet.create({
     width: 200,
     position: "relative",
     left: 70,
-  },
-
-  headerView: {
-    width: 200,
   },
 
   heading: {

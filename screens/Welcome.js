@@ -1,11 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import {
-  Animated,
-  Text,
-  View,
-  StyleSheet,
-  TouchableHighlight,
-} from "react-native";
+import { Animated, Text, View, StyleSheet, TouchableHighlight } from "react-native";
 import useFirstRender from "../utils/FirstRender";
 
 export default function Welcome({ navigation }) {
@@ -43,9 +37,7 @@ export default function Welcome({ navigation }) {
   // Call the fade in fuction on a new re render when either CurrentImageIndex1 or 2 State Changes after 10 secs.
   useEffect(() => {
     if (firstRender) {
-      activeArray.current == 0
-        ? (activeArray.current = 1)
-        : (activeArray.current = 0);
+      activeArray.current == 0 ? (activeArray.current = 1) : (activeArray.current = 0);
     }
     const delay = setTimeout(fadeOut, 10000);
     return () => clearTimeout(delay);
@@ -57,25 +49,18 @@ export default function Welcome({ navigation }) {
     Animated.parallel([
       Animated.timing(
         // Target the correct image based on the active array image.
-        activeArray.current == 0
-          ? imageOpacity1.current
-          : imageOpacity2.current,
+        activeArray.current == 0 ? imageOpacity1.current : imageOpacity2.current,
         {
           toValue: 0,
           duration: 3000,
           useNativeDriver: true,
         }
       ),
-      Animated.timing(
-        activeArray.current == 1
-          ? imageOpacity1.current
-          : imageOpacity2.current,
-        {
-          toValue: 1,
-          duration: 3000,
-          useNativeDriver: true,
-        }
-      ),
+      Animated.timing(activeArray.current == 1 ? imageOpacity1.current : imageOpacity2.current, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
       // When the animation is finished, change the current image index based on the current array the faded out image was apart of.
       activeArray.current == 0
@@ -86,21 +71,12 @@ export default function Welcome({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Animated.Image
-        style={[styles.image, { opacity: imageOpacity1.current }]}
-        source={images1[currentImageIndex1]}
-      />
-      <Animated.Image
-        style={[styles.image, { opacity: imageOpacity2.current }]}
-        source={images2[currentImageIndex2]}
-      />
+      <Animated.Image style={[styles.image, { opacity: imageOpacity1.current }]} source={images1[currentImageIndex1]} />
+      <Animated.Image style={[styles.image, { opacity: imageOpacity2.current }]} source={images2[currentImageIndex2]} />
       <View style={styles.bottomScreen}>
-        <Text style={[styles.textFormat, styles.heading]}>
-          Explore the Beauty of the World with just a tap.
-        </Text>
+        <Text style={[styles.textFormat, styles.heading]}>Explore the Beauty of the World with just a tap.</Text>
         <Text style={[styles.textFormat, { fontSize: 18 }]}>
-          Discover popular attractions & hidden gems around you with ease, your
-          personal guide to local adventures.
+          Discover popular attractions & hidden gems around you with ease, your personal guide to local adventures.
         </Text>
         <View style={styles.buttonsView}>
           <TouchableHighlight

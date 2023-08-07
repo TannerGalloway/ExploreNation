@@ -9,59 +9,62 @@ import { SERPAPI_KEY } from "@env";
 import Map from "../components/Map";
 
 export default function AttractionDetails({ route }) {
-  const width = useWindowDimensions().width - 40;
+  const width = useWindowDimensions().width;
+  const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
   const [additionalattractionData, setAdditionalAttractionData] = useState([]);
   const [attDataLoading, setAttDataLoading] = useState(true);
   let attImageData = [];
   let additionalAttractionInfo = {};
+  const dataErrorObj = {
+    attType: "Unknown",
+    description: "Unable to find info.",
+    photos: Object.values(route.params.thumbnail),
+  };
 
   const getAttractionInfo = async () => {
     try {
       // Get additional attraction details
-      fetch(`https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`)
-        .then((attractionDetailsRes) => attractionDetailsRes.json())
-        .then((attractionDetails) => {
-          if (attractionDetails.search_metadata.status != "Success") {
-            additionalAttractionInfo = {
-              attType: "Unknown",
-              description: "Unable to find info.",
-              photos: Object.values(route.params.thumbnail),
-            };
-          } else {
-            additionalAttractionInfo = {
-              attType: attractionDetails.place_results.type[0],
-              description: attractionDetails.place_results.description,
-            };
-          }
+      const attractionDetailsRes = await fetch(
+        `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
+      );
+      const attractionDetails = await attractionDetailsRes.json();
 
-          // Get additional attraction photos
-          fetch(`https://serpapi.com/search.json?engine=google_maps_photos&data_id=${attractionDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`)
-            .then((attractionPhotosRes) => attractionPhotosRes.json())
-            .then((attractionPhotos) => {
-              if (attractionPhotos.search_metadata.status != "Success") {
-                additionalAttractionInfo = {
-                  attType: "Unknown",
-                  description: "Unable to find info.",
-                  photos: Object.values(route.params.thumbnail),
-                };
-              } else {
-                for (let i = 0; i < attractionPhotos.photos.length; i++) {
-                  attImageData.push(attractionPhotos.photos[i].image);
-                }
-                additionalAttractionInfo = {
-                  attType: attractionDetails.place_results.type[0],
-                  description: attractionDetails.place_results.description,
-                  photos: attImageData,
-                };
-              }
-              setAdditionalAttractionData(additionalAttractionInfo);
-              setAttDataLoading(false);
-            });
-        });
+      if (attractionDetails.search_metadata.status != "Success") {
+        additionalAttractionInfo = dataErrorObj;
+      } else {
+        additionalAttractionInfo = {
+          attType: attractionDetails.place_results.type[0],
+          description: attractionDetails.place_results.description,
+        };
+      }
+
+      // Get additional attraction photos
+      const attractionPhotosRes = await fetch(
+        `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${attractionDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
+      );
+      const attractionPhotos = await attractionPhotosRes.json();
+
+      if (attractionPhotos.search_metadata.status != "Success") {
+        additionalAttractionInfo = dataErrorObj;
+      } else {
+        for (let i = 0; i < attractionPhotos.photos.length; i++) {
+          attImageData.push(attractionPhotos.photos[i].image);
+        }
+        additionalAttractionInfo = {
+          attType: attractionDetails.place_results.type[0],
+          description:
+            attractionDetails.place_results.description != undefined
+              ? attractionDetails.place_results.description
+              : "Unable to find information about this attraction.",
+          photos: attImageData,
+        };
+      }
     } catch (error) {
       console.error(error);
     }
+    setAdditionalAttractionData(additionalAttractionInfo);
+    setAttDataLoading(false);
   };
 
   useEffect(() => {
@@ -86,15 +89,15 @@ export default function AttractionDetails({ route }) {
             <GestureHandlerRootView>
               <Carousel
                 loop={false}
-                width={width}
-                height={width - 80}
+                width={width - 40}
+                height={height / 3}
                 data={additionalattractionData.photos}
                 scrollAnimationDuration={1000}
                 pagingEnabled={true}
                 onProgressChange={(offset, progress) => {
                   setIndex(Math.round(progress));
                 }}
-                renderItem={({ item }) => <Image style={{ height: width - 80, borderRadius: 25, margin: 5 }} source={{ uri: item }} />}
+                renderItem={({ item }) => <Image style={{ height: height / 3, borderRadius: 25, margin: 5 }} source={{ uri: item }} />}
               />
             </GestureHandlerRootView>
 
@@ -108,7 +111,7 @@ export default function AttractionDetails({ route }) {
                   color: "#00A8DA",
                   margin: 3,
                   opacity: 1,
-                  size: 9,
+                  size: 12,
                 }}
                 inactiveIndicatorConfig={{
                   color: "white",
@@ -130,23 +133,23 @@ export default function AttractionDetails({ route }) {
             </View>
 
             {/* Attraction Heading*/}
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              {/* Left Heading View */}
-              <View>
+            <View>
+              {/* Top Heading View */}
+              <View style={styles.headingView}>
                 <Text style={styles.title}>{route.params.name}</Text>
-                <View style={{ flexDirection: "row", marginTop: 15 }}>
-                  <FontAwesome name="map-marker" size={26} color="#00A8DA" style={{ paddingRight: 10 }} />
-                  <Text style={styles.location}>{route.params.location}</Text>
+                <View style={styles.ratingView}>
+                  <FontAwesome name="star" size={15} color="#f3cc4b" style={{ marginTop: 13, marginRight: 6 }} />
+                  <Text style={styles.subText}>{route.params.rating}</Text>
                 </View>
               </View>
 
-              {/* Right Heading View */}
-              <View>
-                <View style={styles.ratingView}>
-                  <FontAwesome name="star" size={15} color="#f3cc4b" style={{ marginTop: 3, marginRight: 6 }} />
-                  <Text style={styles.subText}>{route.params.rating}</Text>
+              {/* Bottom Heading View */}
+              <View style={styles.headingView}>
+                <View style={styles.mapMarkerIconView}>
+                  <FontAwesome name="map-marker" size={26} color="#00A8DA" style={{ paddingRight: 10 }} />
+                  <Text style={styles.location}>{route.params.location}</Text>
                 </View>
-                <Text style={[styles.subText, { marginTop: 15 }]}>{additionalattractionData.attType}</Text>
+                <Text style={[styles.subText, { alignSelf: "flex-end" }]}>{additionalattractionData.attType}</Text>
               </View>
             </View>
 
@@ -154,7 +157,7 @@ export default function AttractionDetails({ route }) {
             <Text style={[styles.title, styles.spacingTopBottom]}>About</Text>
             <Text style={{ color: "#919196", fontSize: 14, marginTop: 5 }}>{additionalattractionData.description}</Text>
             <Text style={[styles.title, styles.spacingTopBottom]}>Location</Text>
-            <View style={[styles.mapView, { height: width - 80, width: width }]}>
+            <View style={[styles.mapView, { height: height / 3 }]}>
               <Map latlng={route.params.latlng} />
             </View>
           </>
@@ -169,7 +172,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#101d23",
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 7,
+  },
+
+  headingView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 
   imagePagination: {
@@ -183,10 +191,16 @@ const styles = StyleSheet.create({
     fontFamily: "RalewayBold",
     fontSize: 18,
     maxWidth: 300,
+    marginTop: 10,
+  },
+
+  mapMarkerIconView: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginTop: 20,
   },
 
   location: {
-    justifyContent: "center",
     color: "#919196",
     fontFamily: "RalewayBold",
     fontSize: 15,
@@ -196,6 +210,7 @@ const styles = StyleSheet.create({
     color: "#919196",
     fontSize: 15,
     fontWeight: "bold",
+    marginTop: 10,
   },
 
   ratingView: {

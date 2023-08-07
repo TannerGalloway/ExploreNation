@@ -3,23 +3,13 @@ import { View, StyleSheet, Pressable, Text } from "react-native";
 import { Feather, Entypo } from "@expo/vector-icons";
 import { Input } from "@rneui/themed";
 
-export default function PasswordInput({
-  placeholder,
-  type,
-  value,
-  onChangeText,
-  onBlur,
-  error,
-  isValid,
-}) {
+export default function PasswordInput({ placeholder, type, value, onChangeText, onBlur, error, isValid }) {
   const [hidePassword, setPwdVisable] = useState(true);
 
   // Password Visibility Icon Change
   let iconName = null;
   hidePassword ? (iconName = "eye") : (iconName = "eye-off");
-  const pwdSubheadingStyle = isValid
-    ? styles.pwdSubheading
-    : styles.pwdSubheadingErrorPresent;
+  const pwdSubheadingStyle = isValid ? styles.pwdSubheading : styles.pwdSubheadingErrorPresent;
 
   return (
     <View style={styles.TextInputView}>
@@ -50,11 +40,7 @@ export default function PasswordInput({
           </Pressable>
         }
       />
-      {type == "Password" ? (
-        <Text style={pwdSubheadingStyle}>
-          Will contain 8 characters with (A-Z, a-z, 0-9, !@#$%^&*)
-        </Text>
-      ) : null}
+      {type == "Password" ? <Text style={pwdSubheadingStyle}>Will contain 8 characters with (A-Z, a-z, 0-9, !@#$%^&*)</Text> : null}
     </View>
   );
 }

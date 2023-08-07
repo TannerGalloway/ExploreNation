@@ -27,11 +27,15 @@ export default function Home({ navigation }) {
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
   const [LocationErrorMsg, setLocationErrorMsg] = useState();
+  const [NearbyLocationTimeout, SetNearbyNearbyLocationTimeout] = useState(false);
+  const width = useWindowDimensions().width;
+  const height = useWindowDimensions().height;
   const snapPoints = ["21%"];
 
   const getCountryandCityInfo = async () => {
     let cityInfo = [];
     let imgRefIndex = 0;
+
     try {
       const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries");
       const countryData = await countryResponse.json();
@@ -40,13 +44,21 @@ export default function Home({ navigation }) {
       for (let i = 0; i < 6; i++) {
         let randCountryDataIndex = genRandNum(countryData.data.length - 1);
 
-        while (countryData.data[randCountryDataIndex].cities.length === 0) {
+        while (countryData.data[randCountryDataIndex].cities.length == 0) {
           randCountryDataIndex = genRandNum(countryData.data.length - 1);
         }
 
         let randCityDataIndex = genRandNum(countryData.data[randCountryDataIndex].cities.length - 1);
 
-        let selectedCity = `${countryData.data[randCountryDataIndex].cities[randCityDataIndex]}, ${countryData.data[randCountryDataIndex].country}`;
+        // Format city and Country string. Remove any whitespace at the beginning or end of the two strings before they are merged.
+        let selectedCity = `${countryData.data[randCountryDataIndex].cities[randCityDataIndex].trim()}, ${countryData.data[
+          randCountryDataIndex
+        ].country.trim()}`;
+
+        // Remove any brackets found in the string and add an ellipsis to any overflow text.
+        if (selectedCity.length > 35) {
+          selectedCity = selectedCity.replace(/\(.*?\)/g, "").substring(0, 35) + "...";
+        }
 
         // Get city image ref ID
         const imageRefResponse = await fetch(
@@ -59,6 +71,7 @@ export default function Home({ navigation }) {
           cityInfo.push({
             city: selectedCity,
             image: require("../assets/images/error_loading.jpg"),
+            id: i,
           });
         } else {
           // If the data returned contains more than 1 images, randomly select 1 of the images and check for empty data before selecting a data index.
@@ -78,6 +91,7 @@ export default function Home({ navigation }) {
           cityInfo.push({
             city: selectedCity,
             image: { uri: cityImage.url },
+            id: i,
           });
         }
       }
@@ -100,7 +114,7 @@ export default function Home({ navigation }) {
     if (emptyIndexes.length > 0) {
       return { status: true, indexes: emptyIndexes };
     } else {
-      return false;
+      return { status: false };
     }
   };
 
@@ -109,16 +123,23 @@ export default function Home({ navigation }) {
     return Math.floor(Math.random() * limit);
   };
 
-  const getLocation = async () => {
+  const getNearbyAttractions = async () => {
     let attractionInfo = [];
     let attLocation = "";
 
-    // Ask for location permission
+    // Ask for location permission.
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      setLocationErrorMsg("Make sure your Location Services are turned on.");
+      setLocationErrorMsg("Unable to locate attractions nearby. \n Make sure your Location Services are turned on.");
       return;
     }
+
+    // Timeout if current location takes too long to be recieved.
+    setTimeout(() => {
+      if (attractionData.length == 0) {
+        SetNearbyNearbyLocationTimeout(true);
+      }
+    }, 10000);
 
     // Get the user's current location if user accepts the location propmpt.
     let position = await Location.getCurrentPositionAsync({});
@@ -140,7 +161,6 @@ export default function Home({ navigation }) {
         });
       } else {
         // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews, thumbnail, location(latitude, longitude, city) and attraction id.
-
         for (let i = 0; i < attractionResponse.results.length; i++) {
           const attImageResponse = await fetch(
             `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
@@ -155,8 +175,8 @@ export default function Home({ navigation }) {
 
           attractionInfo.push({
             name: attractionResponse.results[i].name,
-            rating: attractionResponse.results[i].rating,
-            total_reviews: attractionResponse.results[i].user_ratings_total,
+            rating: attractionResponse.results[i].rating != undefined ? attractionResponse.results[i].rating : 0,
+            total_reviews: attractionResponse.results[i].user_ratings_total != undefined ? attractionResponse.results[i].user_ratings_total : 0,
             thumbnail: { uri: attImageResponse.url },
             location: attLocation,
             latlng: attractionResponse.results[i].geometry.location,
@@ -173,7 +193,8 @@ export default function Home({ navigation }) {
 
   // City card design
   const cityItem = ({ item }) => (
-    <View style={[styles.citiesView, styles.backdropBorder]}>
+    <View
+      style={[styles.backdropBorder, { backgroundColor: "#252B34", width: width / 3.4 }, item.id == 5 ? { marginRight: 0 } : { marginRight: 18 }]}>
       <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.image} />
       <View style={styles.cityNameView}>
         <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
@@ -195,27 +216,23 @@ export default function Home({ navigation }) {
           latlng: item.latlng,
         });
       }}>
-      <ImageBackground
-        style={[styles.attImgPreview, { width: useWindowDimensions.width > 755 ? 150 : 140 }]}
-        imageStyle={[
-          styles.backdropBorder,
-          {
-            borderColor: "white",
-            borderWidth: 1,
-          },
-        ]}
-        source={item.thumbnail}>
-        <View style={styles.attractionTextView}>
-          <Text style={styles.attractionText}>{`${item.name}`}</Text>
-          <View style={{ flexDirection: "row" }}>
-            <FontAwesome name="star" size={13} color="#f3cc4b" style={{ marginTop: 3, marginRight: 6 }} />
-            <Text
-              style={{
-                color: "#d3d3d3",
-              }}>{`${item.rating} (${item.total_reviews})`}</Text>
+      <View>
+        <ImageBackground
+          style={[styles.attImgPreview, { width: width / 2.45 }]}
+          imageStyle={[styles.backdropBorder, { borderColor: "white", borderWidth: 1 }]}
+          source={item.thumbnail}>
+          <View style={styles.attractionTextView}>
+            <Text style={styles.attractionText}>{`${item.name}`}</Text>
+            <View style={{ flexDirection: "row" }}>
+              <FontAwesome name="star" size={13} color="#f3cc4b" style={{ marginTop: 3, marginRight: 6 }} />
+              <Text
+                style={{
+                  color: "#d3d3d3",
+                }}>{`${item.rating} (${item.total_reviews})`}</Text>
+            </View>
           </View>
-        </View>
-      </ImageBackground>
+        </ImageBackground>
+      </View>
     </TouchableWithoutFeedback>
   );
 
@@ -244,9 +261,13 @@ export default function Home({ navigation }) {
   };
 
   useEffect(() => {
-    getCountryandCityInfo();
-    getLocation();
-  }, []);
+    if (!NearbyLocationTimeout) {
+      getCountryandCityInfo();
+      getNearbyAttractions();
+    } else {
+      getNearbyAttractions();
+    }
+  }, [NearbyLocationTimeout]);
 
   return (
     <View style={styles.container}>
@@ -259,7 +280,7 @@ export default function Home({ navigation }) {
         </View>
 
         {/* Top Right View */}
-        <View style={{ marginTop: 25 }}>
+        <View style={{ marginTop: 20 }}>
           <Avatar
             size={54}
             rounded
@@ -370,12 +391,12 @@ export default function Home({ navigation }) {
           />
         ) : (
           <FlatList
-            contentContainerStyle={{ paddingBottom: 500 }}
+            contentContainerStyle={cityData.length == 0 ? { paddingBottom: height / 2.1 } : { paddingBottom: height / 1.7 }}
             data={attractionData}
             renderItem={attractionItem}
             showsVerticalScrollIndicator={false}
             numColumns={2}
-            ListEmptyComponent={<Text style={styles.noData}>No Attractions Found Nearby. {LocationErrorMsg}</Text>}
+            ListEmptyComponent={<Text style={styles.noData}>{LocationErrorMsg == "" ? "No Attractions Found Nearby." : LocationErrorMsg}</Text>}
           />
         )}
       </View>
@@ -422,7 +443,7 @@ const styles = StyleSheet.create({
     color: "#919196",
     fontFamily: "RalewayBold",
     fontSize: 20,
-    marginTop: 35,
+    marginTop: 20,
     marginBottom: 10,
   },
 
@@ -438,12 +459,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     marginVertical: 10,
-  },
-
-  citiesView: {
-    backgroundColor: "#252B34",
-    width: 130,
-    marginRight: 18,
   },
 
   homeResultsHeading: {
@@ -465,8 +480,8 @@ const styles = StyleSheet.create({
   },
 
   imgPreview: {
-    height: 100,
-    width: 130,
+    height: 85,
+    width: 115,
   },
 
   cityImgBorder: {
@@ -509,6 +524,7 @@ const styles = StyleSheet.create({
   noData: {
     fontFamily: "RalewayBold",
     color: "white",
+    lineHeight: 25,
   },
 
   overlay: {

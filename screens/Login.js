@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Pressable,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-} from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button } from "@rneui/themed";
@@ -28,7 +20,7 @@ const validationSchema = Yup.object({
 });
 
 export default function Login({ navigation }) {
-  let email_icon = require("../assets/images/email_icon.png");
+  const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
 
   // Submit form to server.
@@ -52,28 +44,15 @@ export default function Login({ navigation }) {
       validationSchema={validationSchema}
       validateOnChange={false}
       onSubmit={handleSubmit}>
-      {({
-        handleChange,
-        handleSubmit,
-        handleBlur,
-        values,
-        errors,
-        isValid,
-        isSubmitting,
-      }) => (
+      {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         // Moves screen up so screen keyboard does not overlap other componenents.
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior="position"
-          keyboardVerticalOffset={-157}>
+        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-157}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
           <View>
             <Text style={styles.heading}>Welcome Traveler</Text>
-            <Text style={styles.subheading}>
-              Adventure awaits...once you Login.
-            </Text>
+            <Text style={styles.subheading}>Adventure awaits...once you Login.</Text>
           </View>
 
           <EmailInput
@@ -123,9 +102,7 @@ export default function Login({ navigation }) {
                 onPress={() => {
                   navigation.replace("Register");
                 }}>
-                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>
-                  Sign Up
-                </Text>
+                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>Sign Up</Text>
               </Pressable>
             </View>
           </View>

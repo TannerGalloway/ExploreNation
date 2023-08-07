@@ -1,39 +1,27 @@
 import { useEffect } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Pressable,
-  TouchableHighlight,
-  BackHandler,
-} from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, TouchableHighlight, BackHandler } from "react-native";
 
 export default function CheckEmail({ navigation }) {
   // Disable Back Button
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        return true;
-      }
-    );
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      return true;
+    });
 
     return () => backHandler.remove();
   }, []);
 
-  let email_icon = require("../assets/images/email_icon.png");
+  const email_icon = require("../assets/images/email_icon.png");
 
   return (
     <View style={styles.container}>
       <Image style={styles.icon} source={email_icon} />
 
       {/* Heading */}
-      <View style={styles.headingView}>
+      <View style={{ margin: 30 }}>
         <Text style={styles.heading}>Check your Inbox</Text>
         <Text style={styles.subheading}>
-          We just sent you an email to verify/reset your account/password. Tap
-          the link inside to get started/continue your adventure.
+          We just sent you an email to verify/reset your account/password. Tap the link inside to get started/continue your adventure.
         </Text>
       </View>
 
@@ -55,9 +43,7 @@ export default function CheckEmail({ navigation }) {
             onPress={() => {
               alert("Resend Verify/Reset Email");
             }}>
-            <Text style={[styles.accountMessage, { color: "#2282e3" }]}>
-              Resend
-            </Text>
+            <Text style={[styles.accountMessage, { color: "#2282e3" }]}>Resend</Text>
           </Pressable>
         </View>
       </View>
@@ -78,10 +64,6 @@ const styles = StyleSheet.create({
     position: "relative",
     top: 140,
     left: 70,
-  },
-
-  headingView: {
-    margin: 30,
   },
 
   heading: {
