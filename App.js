@@ -5,7 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./utils/supabaseClient";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { FontAwesome5, Entypo } from "@expo/vector-icons";
+import { FontAwesome, Entypo } from "@expo/vector-icons";
 import "react-native-gesture-handler";
 import Welcome from "./screens/Welcome";
 import Login from "./screens/Login";
@@ -15,6 +15,7 @@ import ResetPassword from "./screens/ResetPassword";
 import CheckEmail from "./screens/CheckEmail";
 import BottomTabs from "./screens/BottomTabs";
 import AttractionDetails from "./screens/AttractionDetails";
+import CityDetails from "./screens/CityDetails";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -93,13 +94,42 @@ export default function App() {
                         onPress={() => {
                           console.log("Liked");
                         }}>
-                        <FontAwesome5 name="heart" size={24} color="white" />
+                        <FontAwesome name="heart" size={24} color="white" />
                       </TouchableWithoutFeedback>
                       <TouchableWithoutFeedback
                         onPress={() => {
                           console.log("Shared");
                         }}>
                         <Entypo name="share" style={{ marginLeft: 35, marginRight: 10 }} size={24} color="white" />
+                      </TouchableWithoutFeedback>
+                    </>
+                  ),
+                }}
+              />
+              <Stack.Screen
+                name="CityDetails"
+                component={CityDetails}
+                options={{
+                  headerShown: true,
+                  title: "City Details",
+                  headerStyle: {
+                    backgroundColor: "#101d23",
+                  },
+                  headerTintColor: "#fff",
+                  headerShadowVisible: false,
+                  headerRight: () => (
+                    <>
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          console.log("Liked");
+                        }}>
+                        <FontAwesome name="heart" size={24} color="white" />
+                      </TouchableWithoutFeedback>
+                      <TouchableWithoutFeedback
+                        onPress={() => {
+                          console.log("Map Opened");
+                        }}>
+                        <FontAwesome name="map-marker" size={28} color="white" style={{ marginLeft: 35, marginRight: 10 }} />
                       </TouchableWithoutFeedback>
                     </>
                   ),

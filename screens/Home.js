@@ -34,7 +34,7 @@ export default function Home({ navigation }) {
 
   const getCountryandCityInfo = async () => {
     let cityInfo = [];
-    let imgRefIndex = 0;
+    let cityImgIndex = 0;
 
     try {
       const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries");
@@ -55,42 +55,52 @@ export default function Home({ navigation }) {
           randCountryDataIndex
         ].country.trim()}`;
 
-        // Remove any brackets found in the string and add an ellipsis to any overflow text.
+        // Remove any brackets found in the returned string.
+        selectedCity = selectedCity.replace(/\(.*?\)/g, "");
+
+        // Save full city name for city details screen.
+        let selectedCityFullName = selectedCity;
+
+        // Add an ellipsis to any overflow text.
         if (selectedCity.length > 35) {
-          selectedCity = selectedCity.replace(/\(.*?\)/g, "").substring(0, 35) + "...";
+          selectedCity = selectedCity.substring(0, 35) + "...";
         }
 
-        // Get city image ref ID
-        const imageRefResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${selectedCity}&inputtype=textquery&fields=photos&key=${GOOGLE_PLACES_API_KEY}`
+        // Get city image ref ID and place ID.
+        const cityDataResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${selectedCity}&inputtype=textquery&fields=photos,place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
         );
-        const imgResData = await imageRefResponse.json();
+        const cityResData = await cityDataResponse.json();
 
         // Check returned data for errors otherwise push data to the cityInfo array.
-        if (isResponseObjEmpty(imgResData.candidates).status || imgResData.status == "ZERO_RESULTS") {
+        if (isResponseObjEmpty(cityResData.candidates).status || cityResData.status == "ZERO_RESULTS") {
           cityInfo.push({
             city: selectedCity,
+            cityFullName: selectedCityFullName,
             image: require("../assets/images/error_loading.jpg"),
             id: i,
           });
         } else {
           // If the data returned contains more than 1 images, randomly select 1 of the images and check for empty data before selecting a data index.
-          if (imgResData.candidates.length > 1) {
-            imgRefIndex = genRandNum(imgResData.candidates.length - 1);
+          if (cityResData.candidates.length > 1) {
+            cityImgIndex = genRandNum(cityResData.candidates.length - 1);
 
-            while (isResponseObjEmpty(imgResData.candidates).indexes.includes(imgRefIndex)) {
-              imgRefIndex = genRandNum(imgResData.candidates.length - 1);
+            while (isResponseObjEmpty(cityResData.candidates).indexes.includes(cityImgIndex)) {
+              cityImgIndex = genRandNum(cityResData.candidates.length - 1);
             }
           }
 
           // Get the city image using the ref ID from the previous call.
           const cityImage = await fetch(
-            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${imgResData.candidates[imgRefIndex].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
+            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${cityResData.candidates[cityImgIndex].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
           );
 
           cityInfo.push({
             city: selectedCity,
+            cityFullName: selectedCityFullName,
             image: { uri: cityImage.url },
+            place_id: cityResData.candidates[cityImgIndex].place_id,
+            latlng: cityResData.candidates[cityImgIndex].geometry.location,
             id: i,
           });
         }
@@ -193,14 +203,23 @@ export default function Home({ navigation }) {
 
   // City card design
   const cityItem = ({ item }) => (
-    <View
-      style={[styles.backdropBorder, { backgroundColor: "#252B34", width: width / 3.4 }, item.id == 5 ? { marginRight: 0 } : { marginRight: 18 }]}>
-      <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.image} />
-      <View style={styles.cityNameView}>
-        <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
-        <Text style={styles.homeResultsHeading}>{item.city}</Text>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        navigation.navigate("CityDetails", {
+          cityName: item.cityFullName,
+          place_id: item.place_id,
+          latlng: item.latlng,
+        });
+      }}>
+      <View
+        style={[styles.backdropBorder, { backgroundColor: "#252B34", width: width / 3.4 }, item.id == 5 ? { marginRight: 0 } : { marginRight: 18 }]}>
+        <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.image} />
+        <View style={styles.cityNameView}>
+          <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
+          <Text style={styles.homeResultsHeading}>{item.city}</Text>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 
   // Attraction card design
