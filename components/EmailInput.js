@@ -16,7 +16,7 @@ export default function EmailInput({ value, onChangeText, onBlur, error }) {
         value={value}
         onChangeText={onChangeText}
         onBlur={onBlur}
-        errorStyle={{ color: "red" }}
+        errorStyle={{ color: "red", marginTop: 12 }}
         errorMessage={error}
         selectionColor="white"
         cursorColor="white"

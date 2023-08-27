@@ -46,7 +46,7 @@ export default function Login({ navigation }) {
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         // Moves screen up so screen keyboard does not overlap other componenents.
-        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-157}>
+        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-150}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
@@ -55,12 +55,7 @@ export default function Login({ navigation }) {
             <Text style={styles.subheading}>Adventure awaits...once you Login.</Text>
           </View>
 
-          <EmailInput
-            value={values.email}
-            onChangeText={handleChange("email")}
-            onBlur={handleBlur("email")}
-            error={errors.email}
-          />
+          <EmailInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} />
 
           <PasswordInput
             placeholder="Password"
@@ -153,6 +148,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontFamily: "RalewayBold",
     fontSize: 14,
+    marginTop: 10,
   },
 
   button: {

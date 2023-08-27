@@ -12,10 +12,10 @@ export default function AttractionDetails({ route }) {
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
-  const [additionalattractionData, setAdditionalAttractionData] = useState([]);
+  const [attractionData, setAttractionData] = useState([]);
   const [attDataLoading, setAttDataLoading] = useState(true);
   let attImageData = [];
-  let additionalAttractionInfo = {};
+  let attractionInfo = {};
   const dataErrorObj = {
     attType: "Unknown",
     description: "Unable to find info.",
@@ -23,17 +23,18 @@ export default function AttractionDetails({ route }) {
   };
 
   const getAttractionInfo = async () => {
+    let attractionDetails = {};
     try {
       // Get additional attraction details
       const attractionDetailsRes = await fetch(
         `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
       );
-      const attractionDetails = await attractionDetailsRes.json();
 
-      if (attractionDetails.search_metadata.status != "Success") {
-        additionalAttractionInfo = dataErrorObj;
+      if (!attractionDetailsRes.ok) {
+        attractionInfo = dataErrorObj;
       } else {
-        additionalAttractionInfo = {
+        attractionDetails = await attractionDetailsRes.json();
+        attractionInfo = {
           attType: attractionDetails.place_results.type[0],
           description: attractionDetails.place_results.description,
         };
@@ -43,15 +44,15 @@ export default function AttractionDetails({ route }) {
       const attractionPhotosRes = await fetch(
         `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${attractionDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
       );
-      const attractionPhotos = await attractionPhotosRes.json();
 
-      if (attractionPhotos.search_metadata.status != "Success") {
-        additionalAttractionInfo = dataErrorObj;
+      if (!attractionPhotosRes.ok) {
+        attractionInfo = dataErrorObj;
       } else {
+        const attractionPhotos = await attractionPhotosRes.json();
         for (let i = 0; i < attractionPhotos.photos.length; i++) {
           attImageData.push(attractionPhotos.photos[i].image);
         }
-        additionalAttractionInfo = {
+        attractionInfo = {
           attType: attractionDetails.place_results.type[0],
           description:
             attractionDetails.place_results.description != undefined
@@ -63,7 +64,7 @@ export default function AttractionDetails({ route }) {
     } catch (error) {
       console.error(error);
     }
-    setAdditionalAttractionData(additionalAttractionInfo);
+    setAttractionData(attractionInfo);
     setAttDataLoading(false);
   };
 
@@ -91,7 +92,7 @@ export default function AttractionDetails({ route }) {
                 loop={false}
                 width={width - 40}
                 height={height / 3}
-                data={additionalattractionData.photos}
+                data={attractionData.photos}
                 scrollAnimationDuration={1000}
                 pagingEnabled={true}
                 onProgressChange={(offset, progress) => {
@@ -104,9 +105,9 @@ export default function AttractionDetails({ route }) {
             {/* Image Pagination Dots */}
             <View style={styles.imagePagination}>
               <AnimatedDotsCarousel
-                length={additionalattractionData.photos.length}
+                length={attractionData.photos.length}
                 currentIndex={index}
-                maxIndicators={additionalattractionData.photos.length}
+                maxIndicators={attractionData.photos.length}
                 activeIndicatorConfig={{
                   color: "#00A8DA",
                   margin: 3,
@@ -149,13 +150,13 @@ export default function AttractionDetails({ route }) {
                   <FontAwesome name="map-marker" size={26} color="#00A8DA" style={{ paddingRight: 10 }} />
                   <Text style={styles.location}>{route.params.location}</Text>
                 </View>
-                <Text style={[styles.subText, { alignSelf: "flex-end" }]}>{additionalattractionData.attType}</Text>
+                <Text style={[styles.subText, { alignSelf: "flex-end" }]}>{attractionData.attType}</Text>
               </View>
             </View>
 
             {/* Body Content */}
             <Text style={[styles.title, styles.spacingTopBottom]}>About</Text>
-            <Text style={{ color: "#919196", fontSize: 14, marginTop: 5 }}>{additionalattractionData.description}</Text>
+            <Text style={{ color: "#919196", fontSize: 14, marginTop: 5 }}>{attractionData.description}</Text>
             <Text style={[styles.title, styles.spacingTopBottom]}>Location</Text>
             <View style={[styles.mapView, { height: height / 3 }]}>
               <Map latlng={route.params.latlng} />

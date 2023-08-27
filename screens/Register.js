@@ -59,12 +59,7 @@ export default function Register({ navigation }) {
             <Text style={styles.subheading}>You're 1 step closer to Adventure.</Text>
           </View>
 
-          <EmailInput
-            value={values.email}
-            onChangeText={handleChange("email")}
-            onBlur={handleBlur("email")}
-            error={errors.email}
-          />
+          <EmailInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} />
 
           {/* Password */}
           <PasswordInput

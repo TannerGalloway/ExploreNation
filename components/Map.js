@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import mapStyle from "./mapStyleDark.json";
+import mapStyle from "../utils/mapStyleDark.json";
 
 export default function Map({ latlng }) {
   return (

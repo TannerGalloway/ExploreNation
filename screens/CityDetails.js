@@ -4,10 +4,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
 import { Button } from "@rneui/themed";
-import { FontAwesome } from "@expo/vector-icons";
 import { SERPAPI_KEY, API_NINJAS_KEY, WEATHER_API_KEY, GOOGLE_PLACES_API_KEY } from "@env";
+import AttractionCard from "../components/AttractionCard";
 
-export default function CityDetails({ route }) {
+export default function CityDetails({ navigation, route }) {
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
@@ -19,7 +19,7 @@ export default function CityDetails({ route }) {
   let popAttractionData = [];
   cityInfo = {
     city: route.params.cityName.substring(0, route.params.cityName.indexOf(",")).trim(),
-    country: route.params.cityName.slice(route.params.cityName.indexOf(",") + 1).trim(),
+    country: route.params.cityName.substring(route.params.cityName.indexOf(",") + 1).trim(),
   };
   const cityDataErrorObj = {
     photos: require("../assets/images/error_loading.jpg"),
@@ -37,44 +37,56 @@ export default function CityDetails({ route }) {
       const cityDetailsRes = await fetch(
         `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
       );
-      const cityDetails = await cityDetailsRes.json();
 
-      if (cityDetails.search_metadata.status != "Success") {
+      if (!cityDetailsRes.ok) {
         cityInfo = cityDataErrorObj;
       } else {
+        const cityDetails = await cityDetailsRes.json();
         // Get city photos
         const cityPhotosRes = await fetch(
           `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${cityDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
         );
-        const cityPhotos = await cityPhotosRes.json();
 
-        if (cityPhotos.search_metadata.status != "Success") {
+        if (!cityPhotosRes.ok) {
           cityInfo = cityDataErrorObj;
         } else {
+          const cityPhotos = await cityPhotosRes.json();
           for (let i = 0; i < cityPhotos.photos.length; i++) {
             cityImgData.push(cityPhotos.photos[i].image);
           }
-          cityInfo.description = cityDetails.place_results.description.snippet;
+          cityInfo.description =
+            cityDetails.place_results.description.snippet != undefined
+              ? cityDetails.place_results.description.snippet
+              : "Unable to gather information about this city.";
           cityInfo.photos = cityImgData;
         }
       }
 
       // Get Population of the selected city.
       const cityPopRes = await fetch(`https://api.api-ninjas.com/v1/city?name=${cityInfo.city}`, { headers: { "X-Api-Key": `${API_NINJAS_KEY}` } });
-      const cityPop = await cityPopRes.json();
-      cityInfo.population = cityPop.length != 0 ? formatPopNum(cityPop[0].population) : "Unknown";
+
+      if (!cityPopRes.ok) {
+        cityInfo.population = "Unknown";
+      } else {
+        const cityPop = await cityPopRes.json();
+        if (cityPop.length == 0) {
+          cityInfo.population = "Unknown";
+        } else {
+          cityInfo.population = cityPop[0].population != undefined ? formatPopNum(cityPop[0].population) : "Unknown";
+        }
+      }
 
       // Get the Language spoken and currency used in the Country of the selected city.
       const countryDetailsRes = await fetch(`https://restcountries.com/v3.1/name/${cityInfo.country}`);
       const countryDetails = await countryDetailsRes.json();
-      if (countryDetails.status != 404) {
-        cityInfo.language = Object.values(countryDetails[0].languages)[0];
-        let cityCurrency = Object.values(countryDetails[0].currencies)[0];
-        cityCurrency = cityCurrency.name.slice(cityCurrency.name.lastIndexOf(" ") + 1);
-        cityInfo.currency = cityCurrency.charAt(0).toUpperCase() + cityCurrency.slice(1);
-      } else {
+      if (!countryDetailsRes.ok) {
         cityInfo.language = "Unknown";
         cityInfo.currency = "Unknown";
+      } else {
+        cityInfo.language = Object.values(countryDetails[0].languages)[0];
+        let cityCurrency = Object.values(countryDetails[0].currencies)[0];
+        cityCurrency = cityCurrency.name.substring(cityCurrency.name.lastIndexOf(" ") + 1);
+        cityInfo.currency = cityCurrency.charAt(0).toUpperCase() + cityCurrency.substring(1);
       }
 
       // Get weather info about the selected city.
@@ -109,26 +121,34 @@ export default function CityDetails({ route }) {
       );
       const popAttaction = await popAttactionRes.json();
 
-      for (let i = 0; i < popAttaction.top_sights.sights.length; i++) {
-        // Get Place ID of each attraction.
-        const attractionIDRes = await fetch(
-          `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=
-          ${popAttaction.top_sights.sights[i].title.replace(/\s/g, "+")}&inputtype=textquery&fields=place_id&key=${GOOGLE_PLACES_API_KEY}`
-        );
-        const attractionID = await attractionIDRes.json();
+      if (popAttaction.top_sights != undefined) {
+        for (let i = 0; i < popAttaction.top_sights.sights.length; i++) {
+          // Get Place ID of each attraction.
+          const attractionLocIDRes = await fetch(
+            `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=
+            ${popAttaction.top_sights.sights[i].title.replace(/\s/g, "+")}+${cityInfo.city.replace(
+              /\s/g,
+              "+"
+            )}&inputtype=textquery&fields=place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
+          );
+          const attractionLocIDs = await attractionLocIDRes.json();
 
-        // Get Star Rating and number of reviews of the attraction.
-        const attractionRatingRes = await fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?fields=rating%2Cuser_ratings_total&place_id=${attractionID.candidates[0].place_id}&key=${GOOGLE_PLACES_API_KEY}`
-        );
-        const attractionRating = await attractionRatingRes.json();
+          // Get Star Rating and number of reviews of the attraction.
+          const attractionRatingRes = await fetch(
+            `https://maps.googleapis.com/maps/api/place/details/json?fields=rating%2Cuser_ratings_total&place_id=${attractionLocIDs.candidates[0].place_id}&key=${GOOGLE_PLACES_API_KEY}`
+          );
+          const attractionRating = await attractionRatingRes.json();
 
-        popAttractionData.push({
-          name: popAttaction.top_sights.sights[i].title,
-          thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
-          rating: attractionRating.result.rating != undefined ? attractionRating.result.rating : 0,
-          total_reviews: attractionRating.result.user_ratings_total != undefined ? attractionRating.result.user_ratings_total : 0,
-        });
+          popAttractionData.push({
+            name: popAttaction.top_sights.sights[i].title,
+            rating: attractionRating.result.rating != undefined ? attractionRating.result.rating : 0,
+            total_reviews: attractionRating.result.user_ratings_total != undefined ? attractionRating.result.user_ratings_total : 0,
+            thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
+            location: route.params.cityName,
+            latlng: attractionLocIDs.candidates[0].geometry.location,
+            place_id: attractionLocIDs.candidates[0].place_id != "NOT_FOUND" ? attractionLocIDs.candidates[0].place_id : "NOT_FOUND",
+          });
+        }
       }
     } catch (error) {
       popAttractionData = attDataErrorObj;
@@ -142,26 +162,6 @@ export default function CityDetails({ route }) {
     const formatter = Intl.NumberFormat("en", { notation: "compact" });
     return formatter.format(number);
   };
-
-  // Attraction card design
-  const attractionItem = ({ item }) => (
-    <TouchableWithoutFeedback
-      onPress={() => {
-        alert("Navigate to Attraction Details");
-      }}>
-      <View>
-        <ImageBackground style={[styles.attImgPreview, { width: width / 2.45 }]} imageStyle={styles.attBackdropBorder} source={item.thumbnail}>
-          <View style={styles.attractionTextView}>
-            <Text style={styles.attractionText}>{`${item.name}`}</Text>
-            <View style={{ flexDirection: "row" }}>
-              <FontAwesome name="star" size={13} color="#f3cc4b" style={{ marginTop: 3, marginRight: 6 }} />
-              <Text style={{ color: "#d3d3d3" }}>{`${item.rating} (${item.total_reviews})`}</Text>
-            </View>
-          </View>
-        </ImageBackground>
-      </View>
-    </TouchableWithoutFeedback>
-  );
 
   useEffect(() => {
     getCityInfo();
@@ -276,7 +276,7 @@ export default function CityDetails({ route }) {
           ) : (
             <FlatList
               data={attractionData}
-              renderItem={attractionItem}
+              renderItem={({ item }) => <AttractionCard navigation={navigation} details={item} />}
               scrollEnabled={false}
               numColumns={2}
               ListEmptyComponent={<Text style={styles.noData}>Unable to find Attractions.</Text>}

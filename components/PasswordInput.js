@@ -25,7 +25,7 @@ export default function PasswordInput({ placeholder, type, value, onChangeText, 
         secureTextEntry={hidePassword}
         onChangeText={onChangeText}
         onBlur={onBlur}
-        errorStyle={{ color: "red" }}
+        errorStyle={{ color: "red", marginTop: 12 }}
         errorMessage={error}
         selectionColor="white"
         cursorColor="white"
@@ -40,7 +40,7 @@ export default function PasswordInput({ placeholder, type, value, onChangeText, 
           </Pressable>
         }
       />
-      {type == "Password" ? <Text style={pwdSubheadingStyle}>Will contain 8 characters with (A-Z, a-z, 0-9, !@#$%^&*)</Text> : null}
+      {type == "Password" ? <Text style={pwdSubheadingStyle}>Must contain 8 characters with (A-Z, a-z, 0-9, !@#$%^&*)</Text> : null}
     </View>
   );
 }
@@ -60,16 +60,15 @@ const styles = StyleSheet.create({
     color: "#919196",
     fontFamily: "RalewayRegular",
     fontSize: 13,
-    bottom: 22,
-    marginLeft: 15,
-    marginTop: 10,
+    bottom: 15,
+    marginLeft: 10,
   },
   pwdSubheadingErrorPresent: {
     position: "relative",
     color: "#919196",
     fontFamily: "RalewayRegular",
     fontSize: 13,
-    bottom: 7,
+    bottom: 5,
     marginLeft: 15,
   },
 });

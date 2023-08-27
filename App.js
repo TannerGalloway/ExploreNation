@@ -82,7 +82,7 @@ export default function App() {
                 component={AttractionDetails}
                 options={{
                   headerShown: true,
-                  title: "",
+                  title: "Attraction Details",
                   headerStyle: {
                     backgroundColor: "#101d23",
                   },
@@ -94,7 +94,7 @@ export default function App() {
                         onPress={() => {
                           console.log("Liked");
                         }}>
-                        <FontAwesome name="heart" size={24} color="white" />
+                        <FontAwesome name="heart-o" size={24} color="white" />
                       </TouchableWithoutFeedback>
                       <TouchableWithoutFeedback
                         onPress={() => {
@@ -123,7 +123,7 @@ export default function App() {
                         onPress={() => {
                           console.log("Liked");
                         }}>
-                        <FontAwesome name="heart" size={24} color="white" />
+                        <FontAwesome name="heart-o" size={26} color="white" />
                       </TouchableWithoutFeedback>
                       <TouchableWithoutFeedback
                         onPress={() => {

@@ -20,12 +20,7 @@ export default function ForgotPassword({ navigation }) {
   };
 
   return (
-    <Formik
-      initialValues={{ email: "" }}
-      validateOnMount={true}
-      validationSchema={validationSchema}
-      validateOnChange={false}
-      onSubmit={handleSubmit}>
+    <Formik initialValues={{ email: "" }} validateOnMount={true} validationSchema={validationSchema} validateOnChange={false} onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-280}>
           <Image style={styles.icon} source={email_icon} />
@@ -33,17 +28,10 @@ export default function ForgotPassword({ navigation }) {
           {/* Heading */}
           <View>
             <Text style={styles.heading}>Forgot your Password?</Text>
-            <Text style={styles.subheading}>
-              Enter the Email associated with your account and we'll get you back to Exploring.
-            </Text>
+            <Text style={styles.subheading}>Enter the Email associated with your account and we'll get you back to Exploring.</Text>
           </View>
 
-          <EmailInput
-            value={values.email}
-            onChangeText={handleChange("email")}
-            onBlur={handleBlur("email")}
-            error={errors.email}
-          />
+          <EmailInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} />
 
           {/* Send Button */}
           <View>
@@ -105,6 +93,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
+    marginTop: 20,
     marginBottom: 30,
     height: 61,
     justifyContent: "center",
