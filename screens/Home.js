@@ -6,11 +6,14 @@ import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
+import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import AttractionCard from "../components/AttractionCard";
 
 export default function Home({ navigation }) {
   const bottomSheetRef = useRef();
+  const searchbarRef = useRef();
+  const nav = useNavigation();
   const [modalVisable, setModalVisable] = useState(false);
   const [cityData, setcityData] = useState([]);
   const [attractionData, setAttractionData] = useState([]);
@@ -192,8 +195,8 @@ export default function Home({ navigation }) {
   const cityItem = ({ item }) => (
     <TouchableWithoutFeedback
       onPress={() => {
-        navigation.navigate("CityDetails", {
-          cityName: item.cityFullName,
+        navigation.navigate("DestinationDetails", {
+          name: item.cityFullName,
           place_id: item.place_id,
           latlng: item.latlng,
         });
@@ -207,6 +210,12 @@ export default function Home({ navigation }) {
         </View>
       </View>
     </TouchableWithoutFeedback>
+  );
+
+  const NoResults = ({ errorMsg }) => (
+    <View style={{ flex: 1 }}>
+      <Text style={styles.noResults}>{errorMsg}</Text>
+    </View>
   );
 
   const handleSignOut = async () => {
@@ -232,6 +241,9 @@ export default function Home({ navigation }) {
     }
     Keyboard.dismiss();
   };
+
+  // Clear the searchbar when navigating to the home screen.
+  nav.addListener("focus", () => searchbarRef.current?.clear());
 
   useEffect(() => {
     if (!NearbyLocationTimeout) {
@@ -283,6 +295,10 @@ export default function Home({ navigation }) {
           placeholder="Search Destinations"
           enablePoweredByContainer={false}
           fetchDetails={true}
+          ref={searchbarRef}
+          onFail={() => <NoResults errorMsg={"An error has occurred"} />}
+          onNotFound={() => <NoResults errorMsg={"No results were found"} />}
+          listEmptyComponent={() => <NoResults errorMsg={"No results were found"} />}
           renderRow={(rowData) => (
             <View style={{ flexDirection: "row" }}>
               <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ paddingRight: 10 }} />
@@ -290,10 +306,16 @@ export default function Home({ navigation }) {
             </View>
           )}
           query={{
+            types: "(regions)",
             key: GOOGLE_PLACES_API_KEY,
           }}
           onPress={(data, details) => {
-            console.log(data, details);
+            navigation.navigate("DestinationDetails", {
+              name: data.description,
+              place_id: details.place_id,
+              latlng: details.geometry.location,
+              country: data.types.includes("country"),
+            });
           }}
           textInputProps={{
             placeholderTextColor: "white",
@@ -308,9 +330,6 @@ export default function Home({ navigation }) {
               paddingLeft: 34,
               marginTop: 20,
               color: "white",
-            },
-            listView: {
-              height: useWindowDimensions().height > 755 ? 180 : 136,
             },
             row: {
               backgroundColor: "#252B34",
@@ -498,6 +517,13 @@ const styles = StyleSheet.create({
     fontFamily: "RalewayBold",
     color: "white",
     lineHeight: 25,
+  },
+
+  noResults: {
+    fontFamily: "RalewayBold",
+    color: "white",
+    marginBottom: 5,
+    paddingLeft: 5,
   },
 
   overlay: {

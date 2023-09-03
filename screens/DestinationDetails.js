@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, ScrollView, Text, Image, StyleSheet, useWindowDimensions, FlatList, TouchableWithoutFeedback, ImageBackground } from "react-native";
+import { View, ScrollView, Text, Image, StyleSheet, useWindowDimensions, FlatList } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
@@ -7,21 +7,18 @@ import { Button } from "@rneui/themed";
 import { SERPAPI_KEY, API_NINJAS_KEY, WEATHER_API_KEY, GOOGLE_PLACES_API_KEY } from "@env";
 import AttractionCard from "../components/AttractionCard";
 
-export default function CityDetails({ navigation, route }) {
+export default function DestinationDetails({ navigation, route }) {
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
-  const [cityData, setCityData] = useState([]);
+  const [destinationData, setDestinationData] = useState([]);
   const [attractionData, setAttractionData] = useState([]);
-  const [cityDataLoading, SetCityDataLoading] = useState(true);
+  const [destinationDataLoading, setDestinationDataLoading] = useState(true);
   const [attractionDataLoading, SetAttractionDataLoading] = useState(true);
-  let cityImgData = [];
+  let destinationImgData = [];
   let popAttractionData = [];
-  cityInfo = {
-    city: route.params.cityName.substring(0, route.params.cityName.indexOf(",")).trim(),
-    country: route.params.cityName.substring(route.params.cityName.indexOf(",") + 1).trim(),
-  };
-  const cityDataErrorObj = {
+  let destinationInfo = {};
+  const destinationDataErrorObj = {
     photos: require("../assets/images/error_loading.jpg"),
   };
   const attDataErrorObj = {
@@ -30,94 +27,119 @@ export default function CityDetails({ navigation, route }) {
     rating: 0,
     total_reviews: 0,
   };
+  if (route.params.country) {
+    destinationInfo.country = route.params.name.trim();
+  } else {
+    destinationInfo.city = route.params.name.substring(0, route.params.name.indexOf(",")).trim();
+    destinationInfo.country = route.params.name.substring(route.params.name.lastIndexOf(",") + 1).trim();
+    destinationInfo.countryFullName = route.params.name.substring(route.params.name.indexOf(",") + 1).trim();
+  }
 
-  const getCityInfo = async () => {
+  const getDestinationInfo = async () => {
     try {
-      // Get city details
-      const cityDetailsRes = await fetch(
+      // Get destination details
+      const destinationDetailsRes = await fetch(
         `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
       );
 
-      if (!cityDetailsRes.ok) {
-        cityInfo = cityDataErrorObj;
+      if (!destinationDetailsRes.ok) {
+        destinationInfo = destinationDataErrorObj;
       } else {
-        const cityDetails = await cityDetailsRes.json();
-        // Get city photos
-        const cityPhotosRes = await fetch(
-          `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${cityDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
+        const destinationDetails = await destinationDetailsRes.json();
+
+        // Get destination photos
+        const destinationPhotosRes = await fetch(
+          `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${destinationDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
         );
 
-        if (!cityPhotosRes.ok) {
-          cityInfo = cityDataErrorObj;
+        if (!destinationPhotosRes.ok) {
+          destinationInfo = destinationDataErrorObj;
         } else {
-          const cityPhotos = await cityPhotosRes.json();
-          for (let i = 0; i < cityPhotos.photos.length; i++) {
-            cityImgData.push(cityPhotos.photos[i].image);
+          const destinationPhotos = await destinationPhotosRes.json();
+          for (let i = 0; i < destinationPhotos.photos.length; i++) {
+            destinationImgData.push(destinationPhotos.photos[i].image);
           }
-          cityInfo.description =
-            cityDetails.place_results.description.snippet != undefined
-              ? cityDetails.place_results.description.snippet
-              : "Unable to gather information about this city.";
-          cityInfo.photos = cityImgData;
+          destinationInfo.description =
+            destinationDetails.place_results.description.snippet != undefined
+              ? destinationDetails.place_results.description.snippet
+              : "Unable to gather information about this destination.";
+          destinationInfo.photos = destinationImgData;
         }
       }
 
-      // Get Population of the selected city.
-      const cityPopRes = await fetch(`https://api.api-ninjas.com/v1/city?name=${cityInfo.city}`, { headers: { "X-Api-Key": `${API_NINJAS_KEY}` } });
+      // Get population of the selected city.
+      if (!route.params.country) {
+        const cityPopRes = await fetch(`https://api.api-ninjas.com/v1/city?name=${destinationInfo.city}`, {
+          headers: { "X-Api-Key": `${API_NINJAS_KEY}` },
+        });
 
-      if (!cityPopRes.ok) {
-        cityInfo.population = "Unknown";
-      } else {
-        const cityPop = await cityPopRes.json();
-        if (cityPop.length == 0) {
-          cityInfo.population = "Unknown";
+        if (!cityPopRes.ok) {
+          destinationInfo.population = "Unknown";
         } else {
-          cityInfo.population = cityPop[0].population != undefined ? formatPopNum(cityPop[0].population) : "Unknown";
+          const cityPop = await cityPopRes.json();
+          if (cityPop.length == 0) {
+            destinationInfo.population = "Unknown";
+          } else {
+            destinationInfo.population = cityPop[0].population != undefined ? formatPopNum(cityPop[0].population) : "Unknown";
+          }
         }
       }
 
-      // Get the Language spoken and currency used in the Country of the selected city.
-      const countryDetailsRes = await fetch(`https://restcountries.com/v3.1/name/${cityInfo.country}`);
+      // Get the language spoken, currency, capital and flag of the country or selected city.
+      const countryDetailsRes = await fetch(`https://restcountries.com/v3.1/name/${destinationInfo.country}`);
       const countryDetails = await countryDetailsRes.json();
       if (!countryDetailsRes.ok) {
-        cityInfo.language = "Unknown";
-        cityInfo.currency = "Unknown";
+        destinationInfo.language = "Unknown";
+        destinationInfo.currency = "Unknown";
+        destinationInfo.capital = "Unknown";
+        destinationInfo.population = "Unknown";
+        destinationInfo.flag = require("../assets/images/error_loading.jpg");
       } else {
-        cityInfo.language = Object.values(countryDetails[0].languages)[0];
-        let cityCurrency = Object.values(countryDetails[0].currencies)[0];
-        cityCurrency = cityCurrency.name.substring(cityCurrency.name.lastIndexOf(" ") + 1);
-        cityInfo.currency = cityCurrency.charAt(0).toUpperCase() + cityCurrency.substring(1);
+        destinationInfo.language = Object.values(countryDetails[0].languages)[0];
+        if (route.params.country) {
+          destinationInfo.capital = countryDetails[0].capital[0];
+          destinationInfo.flag = { uri: countryDetails[0].flags.png };
+          destinationInfo.countryFullName = countryDetails[0].name.common;
+          destinationInfo.population = formatPopNum(countryDetails[0].population);
+        } else {
+          let cityCurrency = Object.values(countryDetails[0].currencies)[0];
+          cityCurrency = cityCurrency.name.substring(cityCurrency.name.lastIndexOf(" ") + 1);
+          destinationInfo.currency = cityCurrency.charAt(0).toUpperCase() + cityCurrency.substring(1);
+        }
       }
 
-      // Get weather info about the selected city.
-      const weatherDataRes = await fetch(
-        `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${route.params.latlng.lat}, ${route.params.latlng.lng}`
-      );
+      if (!route.params.country) {
+        // Get weather info about the selected city.
+        const weatherDataRes = await fetch(
+          `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${route.params.latlng.lat}, ${route.params.latlng.lng}`
+        );
 
-      if (!weatherDataRes.ok) {
-        cityInfo.temp = "-";
-        cityInfo.weatherIcon = require("../assets/images/weather_error.png");
-      } else {
-        const weatherData = await weatherDataRes.json();
-        cityInfo.temp = Math.round(weatherData.current.temp_f);
-        cityInfo.weatherIcon =
-          weatherData.current.condition.icon != null
-            ? { uri: `https:${weatherData.current.condition.icon}` }
-            : require("../assets/images/weather_error.png");
+        if (!weatherDataRes.ok) {
+          destinationInfo.temp = "-";
+          destinationInfo.weatherIcon = require("../assets/images/weather_error.png");
+        } else {
+          const weatherData = await weatherDataRes.json();
+          destinationInfo.temp = Math.round(weatherData.current.temp_f);
+          destinationInfo.weatherIcon =
+            weatherData.current.condition.icon != null
+              ? { uri: `https:${weatherData.current.condition.icon}` }
+              : require("../assets/images/weather_error.png");
+        }
       }
     } catch (error) {
       console.error(error);
     }
-    setCityData(cityInfo);
-    SetCityDataLoading(false);
+    setDestinationData(destinationInfo);
+    setDestinationDataLoading(false);
   };
 
-  const getCityAttractionInfo = async () => {
+  const getDestinationAttractionInfo = async () => {
     try {
-      // Get popular attractions found in the selected city.
+      // Get popular attractions found in the selected destination.
       const popAttactionRes = await fetch(
-        `https://serpapi.com/search.json?engine=google&q=Top+sights+in+${cityInfo.city.replace(/\s/g, "+")}+
-        ${cityInfo.country.replace(/\s/g, "+")}&api_key=${SERPAPI_KEY}`
+        `https://serpapi.com/search.json?engine=google&q=Top+sights+in+${
+          route.params.country ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
+        }+${destinationInfo.country.replace(/\s/g, "+")}&api_key=${SERPAPI_KEY}`
       );
       const popAttaction = await popAttactionRes.json();
 
@@ -126,14 +148,13 @@ export default function CityDetails({ navigation, route }) {
           // Get Place ID of each attraction.
           const attractionLocIDRes = await fetch(
             `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=
-            ${popAttaction.top_sights.sights[i].title.replace(/\s/g, "+")}+${cityInfo.city.replace(
-              /\s/g,
-              "+"
-            )}&inputtype=textquery&fields=place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
+            ${popAttaction.top_sights.sights[i].title.replace(/\s/g, "+")}+${
+              route.params.country ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
+            }&inputtype=textquery&fields=place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
           );
           const attractionLocIDs = await attractionLocIDRes.json();
 
-          // Get Star Rating and number of reviews of the attraction.
+          // Get the star rating and number of reviews the attraction currently has.
           const attractionRatingRes = await fetch(
             `https://maps.googleapis.com/maps/api/place/details/json?fields=rating%2Cuser_ratings_total&place_id=${attractionLocIDs.candidates[0].place_id}&key=${GOOGLE_PLACES_API_KEY}`
           );
@@ -144,7 +165,7 @@ export default function CityDetails({ navigation, route }) {
             rating: attractionRating.result.rating != undefined ? attractionRating.result.rating : 0,
             total_reviews: attractionRating.result.user_ratings_total != undefined ? attractionRating.result.user_ratings_total : 0,
             thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
-            location: route.params.cityName,
+            location: route.params.name,
             latlng: attractionLocIDs.candidates[0].geometry.location,
             place_id: attractionLocIDs.candidates[0].place_id != "NOT_FOUND" ? attractionLocIDs.candidates[0].place_id : "NOT_FOUND",
           });
@@ -164,14 +185,14 @@ export default function CityDetails({ navigation, route }) {
   };
 
   useEffect(() => {
-    getCityInfo();
-    getCityAttractionInfo();
+    getDestinationInfo();
+    getDestinationAttractionInfo();
   }, []);
 
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {cityDataLoading ? (
+        {destinationDataLoading ? (
           <Button
             type="clear"
             disabled={true}
@@ -188,7 +209,7 @@ export default function CityDetails({ navigation, route }) {
                 loop={false}
                 width={width - 40}
                 height={height / 3}
-                data={cityData.photos}
+                data={destinationData.photos}
                 loading={true}
                 scrollAnimationDuration={1000}
                 pagingEnabled={true}
@@ -202,9 +223,9 @@ export default function CityDetails({ navigation, route }) {
             {/* Image Pagination Dots */}
             <View style={[styles.imagePagination, { marginBottom: 20 }]}>
               <AnimatedDotsCarousel
-                length={cityData.photos.length}
+                length={destinationData.photos.length}
                 currentIndex={index}
-                maxIndicators={cityData.photos.length}
+                maxIndicators={destinationData.photos.length}
                 activeIndicatorConfig={{
                   color: "#00A8DA",
                   margin: 3,
@@ -233,12 +254,12 @@ export default function CityDetails({ navigation, route }) {
             {/* City Heading */}
             <View style={styles.headingView}>
               <View style={{ width: width / 2 }}>
-                <Text style={styles.headingText}>{cityInfo.city}</Text>
-                <Text style={styles.subHeadingText}>{cityInfo.country}</Text>
+                <Text style={styles.headingText}>{route.params.country ? destinationData.countryFullName : destinationData.city}</Text>
+                {route.params.country ? null : <Text style={styles.subHeadingText}>{destinationData.countryFullName}</Text>}
               </View>
               <View style={[styles.headingView, { position: "relative" }]}>
-                <Image style={styles.weatherImageStyle} source={cityData.weatherIcon} />
-                <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>{cityData.temp}°F</Text>
+                <Image style={styles.headingImageStyle} source={route.params.country ? destinationData.flag : destinationData.weatherIcon} />
+                {route.params.country ? null : <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>{destinationData.temp}°F</Text>}
               </View>
             </View>
 
@@ -246,19 +267,19 @@ export default function CityDetails({ navigation, route }) {
             <Text style={[styles.headingText, styles.topSpacing]}>Overview</Text>
             <View style={[styles.headingView, styles.topSpacing]}>
               <View>
-                <Text style={styles.headingText}>{cityData.population}</Text>
+                <Text style={styles.headingText}>{destinationData.population}</Text>
                 <Text style={styles.subHeadingText}>Population</Text>
               </View>
               <View>
-                <Text style={styles.headingText}>{cityData.language}</Text>
+                <Text style={styles.headingText}>{destinationData.language}</Text>
                 <Text style={styles.subHeadingText}>Language</Text>
               </View>
               <View>
-                <Text style={styles.headingText}>{cityData.currency}</Text>
-                <Text style={styles.subHeadingText}>Currency</Text>
+                <Text style={styles.headingText}>{route.params.country ? destinationData.capital : destinationData.currency}</Text>
+                <Text style={styles.subHeadingText}>{route.params.country ? "Capital" : "Currency"}</Text>
               </View>
             </View>
-            <Text style={[styles.description, styles.topSpacing]}>{cityData.description}</Text>
+            <Text style={[styles.description, styles.topSpacing]}>{destinationData.description}</Text>
           </>
         )}
         {/* Popular Attractions Display */}
@@ -328,9 +349,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  weatherImageStyle: {
-    height: 64,
-    width: 64,
+  headingImageStyle: {
+    height: 75,
+    width: 94,
+    borderRadius: 5,
   },
 
   attImgPreview: {

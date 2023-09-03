@@ -15,7 +15,7 @@ import ResetPassword from "./screens/ResetPassword";
 import CheckEmail from "./screens/CheckEmail";
 import BottomTabs from "./screens/BottomTabs";
 import AttractionDetails from "./screens/AttractionDetails";
-import CityDetails from "./screens/CityDetails";
+import DestinationDetails from "./screens/DestinationDetails";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -82,7 +82,7 @@ export default function App() {
                 component={AttractionDetails}
                 options={{
                   headerShown: true,
-                  title: "Attraction Details",
+                  title: "",
                   headerStyle: {
                     backgroundColor: "#101d23",
                   },
@@ -107,11 +107,11 @@ export default function App() {
                 }}
               />
               <Stack.Screen
-                name="CityDetails"
-                component={CityDetails}
+                name="DestinationDetails"
+                component={DestinationDetails}
                 options={{
                   headerShown: true,
-                  title: "City Details",
+                  title: "",
                   headerStyle: {
                     backgroundColor: "#101d23",
                   },
