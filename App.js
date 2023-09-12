@@ -16,6 +16,7 @@ import CheckEmail from "./screens/CheckEmail";
 import BottomTabs from "./screens/BottomTabs";
 import AttractionDetails from "./screens/AttractionDetails";
 import DestinationDetails from "./screens/DestinationDetails";
+import Discover from "./screens/Discover";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -133,6 +134,19 @@ export default function App() {
                       </TouchableWithoutFeedback>
                     </>
                   ),
+                }}
+              />
+              <Stack.Screen
+                name="Discover"
+                component={Discover}
+                options={{
+                  headerShown: true,
+                  title: "",
+                  headerStyle: {
+                    backgroundColor: "#101d23",
+                  },
+                  headerTintColor: "#fff",
+                  headerShadowVisible: false,
                 }}
               />
             </>

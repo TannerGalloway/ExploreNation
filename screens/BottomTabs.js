@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Entypo, Ionicons } from "@expo/vector-icons";
 import Home from "./Home";
-import { Entypo } from "@expo/vector-icons";
+import Discover from "./Discover";
 
 const Tab = createBottomTabNavigator();
 
@@ -13,9 +14,15 @@ export default function NavTabs() {
         headerShown: false,
         tabBarStyle: styles.tabsContainer,
         tabBarLabelStyle: styles.tabLabel,
-        tabBarIcon: () => <Entypo name="home" size={24} color="white" />,
       }}>
-      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen
+        name="Home"
+        options={{
+          tabBarIcon: () => <Entypo name="home" size={24} color="white" />,
+        }}
+        component={Home}
+      />
+      <Tab.Screen name="Discover" options={{ tabBarIcon: () => <Ionicons name="compass" size={24} color="white" /> }} component={Discover} />
     </Tab.Navigator>
   );
 }
@@ -30,6 +37,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontFamily: "RalewayBold",
     fontSize: 16,
-    paddingBottom: 5,
   },
 });
