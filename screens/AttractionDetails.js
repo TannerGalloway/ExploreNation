@@ -30,14 +30,19 @@ export default function AttractionDetails({ route }) {
         `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
       );
 
+      // Error handling api request.
       if (!attractionDetailsRes.ok) {
         attractionInfo = dataErrorObj;
       } else {
         attractionDetails = await attractionDetailsRes.json();
-        attractionInfo = {
-          attType: attractionDetails.place_results.type[0],
-          description: attractionDetails.place_results.description,
-        };
+        if (attractionDetails.status == "INVALID_REQUEST") {
+          attractionInfo = dataErrorObj;
+        } else {
+          attractionInfo = {
+            attType: attractionDetails.place_results.type[0],
+            description: attractionDetails.place_results.description,
+          };
+        }
       }
 
       // Get additional attraction photos

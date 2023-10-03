@@ -1,28 +1,47 @@
-import { useRef, useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, Keyboard, TouchableWithoutFeedback, TouchableOpacity, FlatList, useWindowDimensions } from "react-native";
-import { Avatar, ListItem, Button } from "@rneui/themed";
+import { useRef, useState, useCallback } from "react";
+import { View, Text, StyleSheet, Image, TouchableWithoutFeedback, TouchableOpacity, FlatList } from "react-native";
+import { Button } from "@rneui/themed";
+import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome, FontAwesome5, Feather, MaterialIcons, Foundation } from "@expo/vector-icons";
-import { supabase } from "../utils/supabaseClient";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GOOGLE_PLACES_API_KEY } from "@env";
+import AccountIconModal from "../components/AccountIconModal";
 
 export default function Discover({ navigation }) {
-  const bottomSheetRef = useRef();
+  const accountIconModalRef = useRef(null);
+  const screenFirstVisit = useRef(true);
+  const loadingOnScreenLeave = useRef(false);
+  const apiCallInProgress = useRef(false);
+  const selectedFilter = useRef("");
+  const apiResController = useRef(null);
   const [modalVisable, setModalVisable] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState("");
   const [loading, setLoading] = useState(true);
   const [attractions, setAttractions] = useState([]);
-  const snapPoints = ["21%"];
   const errorImg = require("../assets/images/error_loading.jpg");
+  let screenLoading = true;
+  let dataError = true;
 
   const getWorldAttractions = async (filterName) => {
     let attractionList = [];
     let locationName = "";
     let locationCode = "";
     let attractionsUrl = "";
-    let attThumbnail;
+    let attThumbnail = null;
+
+    if (loadingOnScreenLeave) {
+      setLoading(true);
+    }
+
+    // If a current api call is in progress when another filter button is selected, cancel the current api call before starting a new call.
+    if (apiResController.current && apiCallInProgress.current) {
+      apiResController.current.abort();
+    }
+
+    // Initialize the abort controller.  Controller needs to be reinitialize after each abort operation performed.
+    apiResController.current = new AbortController();
+
     try {
-      const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries");
+      apiCallInProgress.current = true;
+      const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries", { signal: apiResController.current.signal });
       if (countryResponse.ok) {
         const countryData = await countryResponse.json();
 
@@ -44,7 +63,7 @@ export default function Discover({ navigation }) {
             )}&key=${GOOGLE_PLACES_API_KEY}`;
           }
 
-          const attractionDataResponse = await fetch(attractionsUrl);
+          const attractionDataResponse = await fetch(attractionsUrl, { signal: apiResController.current.signal });
 
           if (attractionDataResponse.ok) {
             const attractionData = await attractionDataResponse.json();
@@ -60,7 +79,8 @@ export default function Discover({ navigation }) {
             // Get the images associated with the selected attraction based on the photo reference id returned.
             if (Object.keys(attractionData.results[randDataIndex]).includes("photos")) {
               const attImageResponse = await fetch(
-                `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionData.results[randDataIndex].photos[0].photo_reference}&maxheight=205&key=${GOOGLE_PLACES_API_KEY}`
+                `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionData.results[randDataIndex].photos[0].photo_reference}&maxheight=205&key=${GOOGLE_PLACES_API_KEY}`,
+                { signal: apiResController.current.signal }
               );
               attThumbnail = attImageResponse.ok ? { uri: attImageResponse.url } : errorImg;
             } else {
@@ -96,8 +116,12 @@ export default function Discover({ navigation }) {
                 locationName = "unknown";
               }
             }
+
             attractionList.push({
-              name: attractionData.results[randDataIndex].name,
+              name:
+                attractionData.results[randDataIndex].name > 30
+                  ? attractionData.results[randDataIndex].name.substring(0, 30) + "..."
+                  : attractionData.results[randDataIndex].name,
               city: locationName,
               thumbnail: attThumbnail,
               rating: attractionData.results[randDataIndex].rating != undefined ? attractionData.results[randDataIndex].rating : 0,
@@ -108,11 +132,23 @@ export default function Discover({ navigation }) {
           }
         }
       }
+      screenLoading = false;
+      apiCallInProgress.current = false;
+      setAttractions(attractionList);
+      setLoading(false);
     } catch (error) {
       console.error(error);
+      if (error.name == "AbortError") {
+        apiCallInProgress.current = false;
+        attractionList = [];
+        setAttractions([]);
+        setLoading(true);
+      } else {
+        apiCallInProgress.current = false;
+        dataError = true;
+        setLoading(false);
+      }
     }
-    setAttractions(attractionList);
-    setLoading(false);
   };
 
   // Attraction Card Design
@@ -133,7 +169,7 @@ export default function Discover({ navigation }) {
           onPress={() => {
             console.log("Liked");
           }}>
-          <FontAwesome style={styles.likeBtn} name="heart-o" size={24} color="white" />
+          <FontAwesome style={styles.likeBtn} name="heart-o" size={24} color="black" />
         </TouchableWithoutFeedback>
         <Image style={[styles.imgPreview, styles.backdropBorder]} source={item.thumbnail} />
         <Text style={styles.resultsHeading}>{item.name}</Text>
@@ -165,51 +201,32 @@ export default function Discover({ navigation }) {
     return modLocationStr;
   };
 
-  const toggleModal = () => {
-    setModalVisable(!modalVisable);
-    if (modalVisable) {
-      bottomSheetRef.current?.dismiss();
-    } else {
-      bottomSheetRef.current?.present();
-    }
-    Keyboard.dismiss();
-  };
-
-  const handleCloseModal = () => {
-    setModalVisable(false);
-    bottomSheetRef.current?.dismiss();
-    Keyboard.dismiss();
-  };
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      alert(error.message);
-    }
+  // Link the modal visable state with the state of the model component. It's needed to render the dark overlay correctly when the modal is active.
+  const modalVisability = (visable) => {
+    setModalVisable(!visable);
   };
 
   const FilterButton = (title) => {
     let filterIcon = {};
     switch (title.title) {
       case "Cultural":
-        filterIcon = <Feather name="globe" size={24} color={selectedIcon == "Cultural" ? "#00A8DA" : "white"} />;
+        filterIcon = <Feather name="globe" size={24} color={selectedFilter.current == "Cultural" ? "#00A8DA" : "white"} />;
         break;
 
       case "Nature":
-        filterIcon = <Foundation name="mountains" size={24} color={selectedIcon == "Nature" ? "#00A8DA" : "white"} />;
+        filterIcon = <Foundation name="mountains" size={24} color={selectedFilter.current == "Nature" ? "#00A8DA" : "white"} />;
         break;
 
       case "Food":
-        filterIcon = <FontAwesome5 name="utensils" size={24} color={selectedIcon == "Food" ? "#00A8DA" : "white"} />;
+        filterIcon = <FontAwesome5 name="utensils" size={24} color={selectedFilter.current == "Food" ? "#00A8DA" : "white"} />;
         break;
 
       case "Night Life":
-        filterIcon = <MaterialIcons name="nightlife" size={24} color={selectedIcon == "Night Life" ? "#00A8DA" : "white"} />;
+        filterIcon = <MaterialIcons name="nightlife" size={24} color={selectedFilter.current == "Night Life" ? "#00A8DA" : "white"} />;
         break;
 
       case "Shopping":
-        filterIcon = <MaterialIcons name="shopping-bag" size={24} color={selectedIcon == "Shopping" ? "#00A8DA" : "white"} />;
+        filterIcon = <MaterialIcons name="shopping-bag" size={24} color={selectedFilter.current == "Shopping" ? "#00A8DA" : "white"} />;
         break;
     }
     return (
@@ -220,11 +237,15 @@ export default function Discover({ navigation }) {
           buttonStyle={styles.filterButton}
           containerStyle={{ marginTop: 10 }}
           onPress={() => {
-            title.title != selectedIcon ? setSelectedIcon(title.title) : setSelectedIcon("");
-            setLoading(true);
-            if (title.title != selectedIcon) {
+            if (!loading) {
+              setLoading(true);
+            }
+
+            if (title.title != selectedFilter.current) {
+              selectedFilter.current = title.title;
               getWorldAttractions(title.title);
             } else {
+              selectedFilter.current = "";
               getWorldAttractions("");
             }
           }}
@@ -234,13 +255,39 @@ export default function Discover({ navigation }) {
     );
   };
 
-  useEffect(() => {
-    getWorldAttractions("");
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      // Inital call to run on first visit of the screen.
+      if (screenFirstVisit.current) {
+        getWorldAttractions(selectedFilter.current);
+
+        // Check if the user has left the screen while data is loading.
+      } else if (loadingOnScreenLeave.current) {
+        loadingOnScreenLeave.current = false;
+        getWorldAttractions(selectedFilter.current);
+      }
+
+      // When leaving the screen, cancel any api requests that are currently in progress.
+      return () => {
+        screenFirstVisit.current = false;
+        if (apiResController.current && screenLoading) {
+          loadingOnScreenLeave.current = true;
+          apiResController.current.abort();
+        }
+      };
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
-      {modalVisable ? <TouchableOpacity style={styles.overlay} onPress={handleCloseModal} /> : null}
+      {modalVisable ? (
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={() => {
+            accountIconModalRef.current.handleCloseModal();
+          }}
+        />
+      ) : null}
       <View style={styles.headerRow}>
         {/* Top Left View */}
         <View>
@@ -249,15 +296,7 @@ export default function Discover({ navigation }) {
         </View>
         {/* Top Right View */}
         <View style={{ marginTop: 20 }}>
-          <Avatar
-            size={54}
-            rounded
-            renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color="white" />}
-            onPress={toggleModal}
-            source={{
-              uri: "https://randomuser.me/api/portraits/men/36.jpg",
-            }}
-          />
+          <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} />
         </View>
       </View>
       {/* Filter Buttons */}
@@ -286,31 +325,28 @@ export default function Discover({ navigation }) {
           renderItem={AttractionCard}
           showsVerticalScrollIndicator={false}
           numColumns={2}
-          ListEmptyComponent={<Text style={styles.noData}>Unable to load new Discoveries</Text>}
+          ListEmptyComponent={
+            dataError ? (
+              <View style={styles.refreshButtonView}>
+                <Text style={styles.noData}>{"Oh no, an error has occured.\nLet's refresh and get you back to Discovering."}</Text>
+                <Button
+                  title="Refresh"
+                  titleStyle={styles.refreshButtonText}
+                  buttonStyle={styles.refreshButton}
+                  TouchableComponent={TouchableOpacity}
+                  onPress={() => {
+                    screenLoading = true;
+                    setLoading(true);
+                    getWorldAttractions(selectedFilter.current);
+                  }}
+                />
+              </View>
+            ) : (
+              <Text style={styles.noData}>Unable to load new Discoveries</Text>
+            )
+          }
         />
       )}
-
-      {/* Account Icon Modal */}
-      <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints} backgroundStyle={styles.listItemContainer}>
-        <View>
-          <TouchableWithoutFeedback onPress={() => console.log("Settings")}>
-            <ListItem containerStyle={styles.listItemContainer}>
-              <Feather name="settings" size={25} color="white" />
-              <ListItem.Content>
-                <ListItem.Title style={styles.listItemText}>Settings</ListItem.Title>
-              </ListItem.Content>
-            </ListItem>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={handleSignOut}>
-            <ListItem containerStyle={styles.listItemContainer}>
-              <MaterialIcons name="logout" size={25} color="white" />
-              <ListItem.Content>
-                <ListItem.Title style={styles.listItemText}>Log Out</ListItem.Title>
-              </ListItem.Content>
-            </ListItem>
-          </TouchableWithoutFeedback>
-        </View>
-      </BottomSheetModal>
     </View>
   );
 }
@@ -370,6 +406,9 @@ const styles = StyleSheet.create({
   },
 
   likeBtn: {
+    backgroundColor: "white",
+    borderRadius: 30,
+    padding: 3,
     position: "absolute",
     top: 5,
     right: 5,
@@ -390,20 +429,30 @@ const styles = StyleSheet.create({
     paddingBottom: 7,
   },
 
-  listItemContainer: {
-    backgroundColor: "#252B34",
+  refreshButtonView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  listItemText: {
+  refreshButtonText: {
     color: "white",
     fontFamily: "RalewayBold",
-    fontSize: 20,
-    paddingBottom: 5,
+    fontSize: 16,
+  },
+
+  refreshButton: {
+    marginTop: 15,
+    height: 53,
+    width: 200,
+    borderRadius: 100,
+    backgroundColor: "#00A8DA",
   },
 
   noData: {
     fontFamily: "RalewayBold",
     color: "white",
+    textAlign: "center",
     lineHeight: 25,
     marginTop: 18,
   },

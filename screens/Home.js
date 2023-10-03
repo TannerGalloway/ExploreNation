@@ -1,50 +1,58 @@
-import { useRef, useState, useEffect } from "react";
-import { View, Text, Image, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, Keyboard, FlatList, TouchableOpacity } from "react-native";
-import { supabase } from "../utils/supabaseClient";
-import { Avatar, ListItem, Button } from "@rneui/themed";
-import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useRef, useState, useCallback } from "react";
+import { View, Text, Image, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, FlatList, TouchableOpacity } from "react-native";
+import { Button } from "@rneui/themed";
+import { FontAwesome, Feather } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
-import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import AttractionCard from "../components/AttractionCard";
+import AccountIconModal from "../components/AccountIconModal";
 
 export default function Home({ navigation }) {
-  const bottomSheetRef = useRef();
-  const searchbarRef = useRef();
-  const nav = useNavigation();
+  const accountIconModalRef = useRef(null);
+  const searchbarRef = useRef(null);
+  const screenFirstVisit = useRef(true);
+  const cityLoadingOnScreenLeave = useRef(false);
+  const attLoadingOnScreenLeave = useRef(false);
+  const apiResController = useRef(null);
   const [modalVisable, setModalVisable] = useState(false);
   const [cityData, setcityData] = useState([]);
   const [attractionData, setAttractionData] = useState([]);
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
-  const [LocationErrorMsg, setLocationErrorMsg] = useState("Unable to locate attractions nearby. \nMake sure your Location Services are turned on.");
-  const [NearbyLocationTimeout, SetNearbyNearbyLocationTimeout] = useState(false);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
-  const snapPoints = ["21%"];
   const errorImg = require("../assets/images/error_loading.jpg");
+  let attTimeout = null;
+  let locationErrorMsg = "Unable to locate attractions nearby. \nMake sure your Location Services are turned on.";
+  let citySectionLoading = true;
+  let attSectionLoading = true;
 
   const getCountryandCityInfo = async () => {
     let cityInfo = [];
     let cityImgIndex = 0;
 
+    if (cityLoadingOnScreenLeave) {
+      citySectionLoading = true;
+      setCityLoading(true);
+    }
+
     try {
-      const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries");
+      const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries", { signal: apiResController.current.signal });
       if (countryResponse.ok) {
         const countryData = await countryResponse.json();
 
         // Randomly Select 6 coutries and cities. Ignoring any countries that contains no cities.
         for (let i = 0; i < 6; i++) {
           cityImgIndex = 0;
-          let randCountryDataIndex = genRandNum(countryData.data.length - 1);
+          let randCountryDataIndex = genRandNum(countryData.data.length);
 
           while (countryData.data[randCountryDataIndex].cities.length == 0) {
-            randCountryDataIndex = genRandNum(countryData.data.length - 1);
+            randCountryDataIndex = genRandNum(countryData.data.length);
           }
 
-          let randCityDataIndex = genRandNum(countryData.data[randCountryDataIndex].cities.length - 1);
+          let randCityDataIndex = genRandNum(countryData.data[randCountryDataIndex].cities.length);
 
           // Format City and Country string. Remove any whitespace at the beginning or end of the two strings before they are merged.
           let selectedCity = `${countryData.data[randCountryDataIndex].cities[randCityDataIndex].trim()}, ${countryData.data[
@@ -62,12 +70,13 @@ export default function Home({ navigation }) {
 
           // Get city image ref ID and place ID.
           const cityDataResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${selectedCity}&inputtype=textquery&fields=photos,place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
+            `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${selectedCity}&inputtype=textquery&fields=photos,place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`,
+            { signal: apiResController.current.signal }
           );
 
           // Add an ellipsis to any overflow text.
           if (selectedCity.length > 30) {
-            selectedCity = selectedCity.substring(0, 35) + "...";
+            selectedCity = selectedCity.substring(0, 30) + "...";
           }
 
           if (cityDataResponse.ok) {
@@ -75,10 +84,10 @@ export default function Home({ navigation }) {
             if (cityResData.status == "OK") {
               // If the data returned contains more than 1 images, randomly select 1 of the images and check for empty data before changing the data index.
               if (cityResData.candidates.length > 1) {
-                cityImgIndex = genRandNum(cityResData.candidates.length - 1);
+                cityImgIndex = genRandNum(cityResData.candidates.length);
 
                 while (!Object.keys(cityResData.candidates[cityImgIndex]).includes("photos")) {
-                  cityImgIndex = genRandNum(cityResData.candidates.length - 1);
+                  cityImgIndex = genRandNum(cityResData.candidates.length);
                 }
               }
 
@@ -86,7 +95,8 @@ export default function Home({ navigation }) {
               if (Object.keys(cityResData.candidates[cityImgIndex]).includes("photos")) {
                 // Get the city image using the ref ID from the previous call.
                 const cityImage = await fetch(
-                  `https://maps.googleapis.com/maps/api/place/photo?photoreference=${cityResData.candidates[cityImgIndex].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
+                  `https://maps.googleapis.com/maps/api/place/photo?photoreference=${cityResData.candidates[cityImgIndex].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
+                  { signal: apiResController.current.signal }
                 );
                 cityInfo.push({
                   city: selectedCity,
@@ -112,6 +122,7 @@ export default function Home({ navigation }) {
       console.error(error);
     }
 
+    citySectionLoading = false;
     setcityData(cityInfo);
     setCityLoading(false);
   };
@@ -125,19 +136,26 @@ export default function Home({ navigation }) {
     let attractionInfo = [];
     let attLocation = "";
 
+    if (attLoadingOnScreenLeave) {
+      attSectionLoading = true;
+      setAttLoading(true);
+    }
+
     // Ask for location permission.
     let { status } = await Location.requestForegroundPermissionsAsync();
 
     if (status == "denied") {
+      attSectionLoading = false;
       setAttLoading(false);
       return;
     }
 
-    setLocationErrorMsg();
+    locationErrorMsg = "";
+
     // Timeout if current location takes too long to be recieved.
-    setTimeout(() => {
-      if (attractionData.length == 0) {
-        SetNearbyNearbyLocationTimeout(true);
+    attTimeout = setTimeout(() => {
+      if (attSectionLoading) {
+        getNearbyAttractions();
       }
     }, 10000);
 
@@ -147,7 +165,8 @@ export default function Home({ navigation }) {
     try {
       // Get Nearby Attractions that are labled as tourist attractions and fall into a circle with a radius of 10 miles centered around the user's current location.
       const nearbyAttrationsResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${`${position.coords.latitude},${position.coords.longitude}`}&radius=16093&type=tourist_attraction&key=${GOOGLE_PLACES_API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${`${position.coords.latitude},${position.coords.longitude}`}&radius=16093&type=tourist_attraction&key=${GOOGLE_PLACES_API_KEY}`,
+        { signal: apiResController.current.signal }
       );
 
       if (!nearbyAttrationsResponse.ok) {
@@ -160,10 +179,12 @@ export default function Home({ navigation }) {
         });
       } else {
         const attractionResponse = await nearbyAttrationsResponse.json();
+
         // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews, thumbnail, location(latitude, longitude, city) and attraction id.
         for (let i = 0; i < attractionResponse.results.length; i++) {
           const attImageResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`
+            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
+            { signal: apiResController.current.signal }
           );
 
           const locationCode = attractionResponse.results[i].plus_code;
@@ -187,6 +208,8 @@ export default function Home({ navigation }) {
     } catch (error) {
       console.error(error);
     }
+
+    attSectionLoading = false;
     setAttractionData(attractionInfo);
     setAttLoading(false);
   };
@@ -218,45 +241,59 @@ export default function Home({ navigation }) {
     </View>
   );
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      alert(error.message);
-    }
+  // Link the modal visable state with the state of the model component. It's needed to render the dark overlay correctly when the modal is active.
+  const modalVisability = (visable) => {
+    setModalVisable(!visable);
   };
 
-  const handleCloseModal = () => {
-    setModalVisable(false);
-    bottomSheetRef.current?.dismiss();
-    Keyboard.dismiss();
-  };
+  useFocusEffect(
+    useCallback(() => {
+      // Clear the searchbar when navigating to the home screen.
+      const searchBarClear = navigation.addListener("focus", () => searchbarRef.current?.clear());
 
-  const toggleModal = () => {
-    setModalVisable(!modalVisable);
-    if (modalVisable) {
-      bottomSheetRef.current?.dismiss();
-    } else {
-      bottomSheetRef.current?.present();
-    }
-    Keyboard.dismiss();
-  };
+      // Inital call to run on first visit of the screen.
+      if (screenFirstVisit.current) {
+        getCountryandCityInfo();
+        getNearbyAttractions();
 
-  // Clear the searchbar when navigating to the home screen.
-  nav.addListener("focus", () => searchbarRef.current?.clear());
+        // Check if the user has left the screen while data is loading.
+      } else if (cityLoadingOnScreenLeave.current) {
+        cityLoadingOnScreenLeave.current = false;
+        getCountryandCityInfo();
+      } else if (attLoadingOnScreenLeave.current) {
+        attLoadingOnScreenLeave.current = false;
+        getNearbyAttractions();
+      } else if (cityLoadingOnScreenLeave.current && attLoadingOnScreenLeave.current) {
+        getCountryandCityInfo();
+        getNearbyAttractions();
+      }
 
-  useEffect(() => {
-    if (!NearbyLocationTimeout) {
-      getCountryandCityInfo();
-      getNearbyAttractions();
-    } else {
-      getNearbyAttractions();
-    }
-  }, [NearbyLocationTimeout]);
+      // When leaving the screen, cancel any api requests that are currently in progress.
+      return () => {
+        searchBarClear;
+        clearTimeout(attTimeout);
+        screenFirstVisit.current = false;
+        if (apiResController.current && citySectionLoading) {
+          cityLoadingOnScreenLeave.current = true;
+          apiResController.current.abort();
+        } else if (apiResController.current && attSectionLoading) {
+          attLoadingOnScreenLeave = true;
+          apiResController.current.abort();
+        }
+      };
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
-      {modalVisable ? <TouchableOpacity style={styles.overlay} onPress={handleCloseModal} /> : null}
+      {modalVisable ? (
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={() => {
+            accountIconModalRef.current.handleCloseModal();
+          }}
+        />
+      ) : null}
       <View style={styles.topElements}>
         {/* Top Left View */}
         <View>
@@ -266,15 +303,7 @@ export default function Home({ navigation }) {
 
         {/* Top Right View */}
         <View style={{ marginTop: 20 }}>
-          <Avatar
-            size={54}
-            rounded
-            renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color="white" />}
-            onPress={toggleModal}
-            source={{
-              uri: "https://randomuser.me/api/portraits/men/36.jpg",
-            }}
-          />
+          <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} />
         </View>
       </View>
 
@@ -388,32 +417,10 @@ export default function Home({ navigation }) {
             renderItem={({ item }) => <AttractionCard navigation={navigation} details={item} />}
             showsVerticalScrollIndicator={false}
             numColumns={2}
-            ListEmptyComponent={<Text style={styles.noData}>{LocationErrorMsg == "" ? "No Attractions Found Nearby." : LocationErrorMsg}</Text>}
+            ListEmptyComponent={<Text style={styles.noData}>{locationErrorMsg == "" ? "No Attractions Found Nearby." : locationErrorMsg}</Text>}
           />
         )}
       </View>
-
-      {/* Account Icon Modal */}
-      <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints} backgroundStyle={styles.ListItemContainer}>
-        <View>
-          <TouchableWithoutFeedback onPress={() => console.log("Settings")}>
-            <ListItem containerStyle={styles.ListItemContainer}>
-              <Feather name="settings" size={25} color="white" />
-              <ListItem.Content>
-                <ListItem.Title style={styles.ListItemText}>Settings</ListItem.Title>
-              </ListItem.Content>
-            </ListItem>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={handleSignOut}>
-            <ListItem containerStyle={styles.ListItemContainer}>
-              <MaterialIcons name="logout" size={25} color="white" />
-              <ListItem.Content>
-                <ListItem.Title style={styles.ListItemText}>Log Out</ListItem.Title>
-              </ListItem.Content>
-            </ListItem>
-          </TouchableWithoutFeedback>
-        </View>
-      </BottomSheetModal>
     </View>
   );
 }
