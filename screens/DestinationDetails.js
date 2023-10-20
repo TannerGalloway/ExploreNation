@@ -5,7 +5,7 @@ import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
 import { Button } from "@rneui/themed";
 import { SERPAPI_KEY, API_NINJAS_KEY, WEATHER_API_KEY, GOOGLE_PLACES_API_KEY } from "@env";
-import AttractionCard from "../components/AttractionCard";
+import AttractionCardDetailed from "../components/AttractionCardDetailed";
 
 export default function DestinationDetails({ navigation, route }) {
   const width = useWindowDimensions().width;
@@ -297,7 +297,7 @@ export default function DestinationDetails({ navigation, route }) {
           ) : (
             <FlatList
               data={attractionData}
-              renderItem={({ item }) => <AttractionCard navigation={navigation} details={item} />}
+              renderItem={({ item }) => <AttractionCardDetailed navigation={navigation} details={item} />}
               scrollEnabled={false}
               numColumns={2}
               ListEmptyComponent={<Text style={styles.noData}>Unable to find Attractions.</Text>}

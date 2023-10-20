@@ -6,7 +6,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import * as Location from "expo-location";
-import AttractionCard from "../components/AttractionCard";
+import AttractionCardDetailed from "../components/AttractionCardDetailed";
 import AccountIconModal from "../components/AccountIconModal";
 
 export default function Home({ navigation }) {
@@ -33,10 +33,13 @@ export default function Home({ navigation }) {
     let cityInfo = [];
     let cityImgIndex = 0;
 
-    if (cityLoadingOnScreenLeave) {
+    if (cityLoadingOnScreenLeave.current) {
       citySectionLoading = true;
       setCityLoading(true);
     }
+
+    // Initialize the abort controller.  Controller needs to be reinitialize after each abort operation performed.
+    apiResController.current = new AbortController();
 
     try {
       const countryResponse = await fetch("https://countriesnow.space/api/v0.1/countries", { signal: apiResController.current.signal });
@@ -136,10 +139,13 @@ export default function Home({ navigation }) {
     let attractionInfo = [];
     let attLocation = "";
 
-    if (attLoadingOnScreenLeave) {
+    if (attLoadingOnScreenLeave.current) {
       attSectionLoading = true;
       setAttLoading(true);
     }
+
+    // Initialize the abort controller.  Controller needs to be reinitialize after each abort operation performed.
+    apiResController.current = new AbortController();
 
     // Ask for location permission.
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -277,7 +283,7 @@ export default function Home({ navigation }) {
           cityLoadingOnScreenLeave.current = true;
           apiResController.current.abort();
         } else if (apiResController.current && attSectionLoading) {
-          attLoadingOnScreenLeave = true;
+          attLoadingOnScreenLeave.current = true;
           apiResController.current.abort();
         }
       };
@@ -414,7 +420,7 @@ export default function Home({ navigation }) {
           <FlatList
             contentContainerStyle={cityData.length == 0 ? { paddingBottom: height / 2.1 } : { paddingBottom: height / 1.7 }}
             data={attractionData}
-            renderItem={({ item }) => <AttractionCard navigation={navigation} details={item} />}
+            renderItem={({ item }) => <AttractionCardDetailed navigation={navigation} details={item} />}
             showsVerticalScrollIndicator={false}
             numColumns={2}
             ListEmptyComponent={<Text style={styles.noData}>{locationErrorMsg == "" ? "No Attractions Found Nearby." : locationErrorMsg}</Text>}

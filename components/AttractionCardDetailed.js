@@ -1,7 +1,7 @@
 import { View, Text, ImageBackground, StyleSheet, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 
-export default function AttractionCard({ navigation, details }) {
+export default function AttractionCardDetailed({ navigation, details }) {
   const width = useWindowDimensions().width;
 
   const formatPopNum = (number) => {

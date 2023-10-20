@@ -1,10 +1,11 @@
 import { useRef, useState, useCallback } from "react";
-import { View, Text, StyleSheet, Image, TouchableWithoutFeedback, TouchableOpacity, FlatList } from "react-native";
+import { View, Text, StyleSheet, TouchableWithoutFeedback, TouchableOpacity, FlatList } from "react-native";
 import { Button } from "@rneui/themed";
 import { useFocusEffect } from "@react-navigation/native";
-import { FontAwesome, FontAwesome5, Feather, MaterialIcons, Foundation } from "@expo/vector-icons";
+import { FontAwesome5, Feather, MaterialIcons, Foundation } from "@expo/vector-icons";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import AccountIconModal from "../components/AccountIconModal";
+import AttractionCardGeneric from "../components/AttractionCardGeneric";
 
 export default function Discover({ navigation }) {
   const accountIconModalRef = useRef(null);
@@ -27,7 +28,7 @@ export default function Discover({ navigation }) {
     let attractionsUrl = "";
     let attThumbnail = null;
 
-    if (loadingOnScreenLeave) {
+    if (loadingOnScreenLeave.current) {
       setLoading(true);
     }
 
@@ -150,36 +151,6 @@ export default function Discover({ navigation }) {
       }
     }
   };
-
-  // Attraction Card Design
-  const AttractionCard = ({ item }) => (
-    <TouchableWithoutFeedback
-      onPress={() => {
-        navigation.navigate("AttractionDetails", {
-          name: item.name,
-          rating: item.rating,
-          thumbnail: item.thumbnail,
-          place_id: item.place_id,
-          location: item.city,
-          latlng: item.latlng,
-        });
-      }}>
-      <View style={[styles.backdropBorder, styles.attractionCardView, item.id % 2 === 1 ? { marginRight: 0 } : { marginRight: 18 }]}>
-        <TouchableWithoutFeedback
-          onPress={() => {
-            console.log("Liked");
-          }}>
-          <FontAwesome style={styles.likeBtn} name="heart-o" size={24} color="black" />
-        </TouchableWithoutFeedback>
-        <Image style={[styles.imgPreview, styles.backdropBorder]} source={item.thumbnail} />
-        <Text style={styles.resultsHeading}>{item.name}</Text>
-        <View style={styles.attractionNameView}>
-          <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
-          <Text style={[styles.resultsHeading, { fontFamily: "RalewayMedium" }]}>{item.city}</Text>
-        </View>
-      </View>
-    </TouchableWithoutFeedback>
-  );
 
   // Generate a random number with the limit being the parameter given.
   const genRandNum = (limit) => {
@@ -322,7 +293,7 @@ export default function Discover({ navigation }) {
         <FlatList
           contentContainerStyle={{ paddingBottom: 20 }}
           data={attractions}
-          renderItem={AttractionCard}
+          renderItem={({ item }) => <AttractionCardGeneric navigation={navigation} details={item} />}
           showsVerticalScrollIndicator={false}
           numColumns={2}
           ListEmptyComponent={
@@ -388,45 +359,6 @@ const styles = StyleSheet.create({
     fontFamily: "RalewayMedium",
     textAlign: "center",
     marginBottom: 10,
-  },
-
-  backdropBorder: {
-    borderRadius: 10,
-  },
-
-  attractionCardView: {
-    flex: 1,
-    backgroundColor: "#252B34",
-    marginTop: 18,
-  },
-
-  imgPreview: {
-    height: 205,
-    width: "auto",
-  },
-
-  likeBtn: {
-    backgroundColor: "white",
-    borderRadius: 30,
-    padding: 3,
-    position: "absolute",
-    top: 5,
-    right: 5,
-    zIndex: 1,
-  },
-
-  resultsHeading: {
-    fontFamily: "RalewayBold",
-    fontSize: 13,
-    color: "white",
-    marginVertical: 7,
-    paddingHorizontal: 7,
-  },
-
-  attractionNameView: {
-    flexDirection: "row",
-    paddingHorizontal: 7,
-    paddingBottom: 7,
   },
 
   refreshButtonView: {
