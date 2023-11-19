@@ -1,54 +1,89 @@
-import { useState, useRef, useEffect } from "react";
-import { supabase } from "../utils/supabaseClient";
+import { useState, useRef, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, Image, TouchableWithoutFeedback } from "react-native";
+import { AppContext } from "../utils/AppContext";
+import { supabase } from "../utils/supabaseClient";
 import { FontAwesome } from "@expo/vector-icons";
 
 export default function AttractionCardGeneric({ navigation, details }) {
   const [favorite, setFavorite] = useState(false);
+  const { setScreenData } = useContext(AppContext);
   let favorited = useRef(false);
 
-  const getLoggedinUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user.id;
+  const getLoggedinUser = async (funcCallName) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      return user.id;
+    } catch (error) {
+      likeErrorHandle(error, funcCallName);
+    }
   };
 
-  const getAttractionID = async () => {
+  const likeErrorHandle = (error, funcCallName) => {
+    if (funcCallName == "add") {
+      favorited.current = false;
+      setFavorite(favorited.current);
+    } else if (funcCallName == "delete") {
+      favorited.current = true;
+      setFavorite(favorited.current);
+    } else {
+      console.error(error);
+      console.error(funcCallName);
+    }
+  };
+
+  const getAttractionID = async (funcCallName) => {
     try {
       // Get the id of the selected attraction.
       const { data } = await supabase.from("attractions").select("id").eq("att_place_id", details.place_id);
       return data;
     } catch (error) {
-      console.error(error);
+      likeErrorHandle(error, funcCallName);
     }
   };
 
-  let attractionIDRes = getAttractionID();
-  let currentUser = getLoggedinUser();
-
-  const getAttractionFavID = async () => {
+  // Check to see if the attraction is currently favorited in the database.
+  const getAttractionFavStatus = async (funcCallName) => {
     try {
-      // Get the id of the selected attraction form the attraction_favs table in the database.
-      const { data } = await supabase.from("attraction_favs").select("attraction_id").eq("profile_id", currentUser._j);
-      return data;
+      let attractionIDRes = await getAttractionID("FavStatus");
+      let currentUser = await getLoggedinUser("user");
+
+      if (attractionIDRes.length != 0) {
+        // Check to see if the current attraction id has been favorited by the current user.
+        const { data } = await supabase
+          .from("attraction_favs")
+          .select("attraction_id")
+          .eq("profile_id", currentUser)
+          .eq("attraction_id", attractionIDRes[0].id);
+
+        // Set the heart icon to active/inactive if the attraction is found/not found in the attraction_favs table.
+        if (data.length > 0) {
+          favorited.current = true;
+          setFavorite(favorited.current);
+        } else {
+          favorited.current = false;
+          setFavorite(favorited.current);
+        }
+      }
     } catch (error) {
-      console.error(error);
+      likeErrorHandle(error, funcCallName);
     }
   };
-
-  let attractionFavIDRes = getAttractionFavID();
 
   const addFavorite = async () => {
-    let attractionID = attractionIDRes._j[0];
     try {
-      // If the attraction is already in the database don't insert the attraction. Get the current attraction id and create the link between the id and the user who favorited the attraction.
-      if (attractionIDRes._j.length == 0) {
+      let attractionIDRes = await getAttractionID("add");
+      let currentUser = await getLoggedinUser("add");
+      let attractionID = attractionIDRes[0];
+
+      // Get the current attraction id and create the link between the id and the user who favorited the attraction.  If the attraction is not already in the database.
+      if (attractionIDRes.length == 0) {
         // Insert attraction data
         const { data } = await supabase
           .from("attractions")
           .insert({
-            att_city: details.city,
+            att_location: details.city,
             att_name: details.name,
             att_rating: details.rating,
             att_lat: details.latlng.lat,
@@ -60,46 +95,47 @@ export default function AttractionCardGeneric({ navigation, details }) {
         attractionID = data[0];
       }
 
-      // Insert data into the attraction_favs table. Link the current user with the favorited attraction id.
+      // Insert data into the database. Link the current user with the favorited attraction id.
       await supabase.from("attraction_favs").insert({
         attraction_id: attractionID.id,
-        profile_id: currentUser._j,
+        profile_id: currentUser,
       });
     } catch (error) {
-      favorited.current = false;
-      setFavorite(favorited.current);
-      console.error(error);
+      likeErrorHandle(error, "add");
     }
   };
 
   const deleteFavorite = async () => {
     try {
-      // Get the id of the selected attraction.
-      const { data } = await supabase.from("attractions").select("id").eq("att_place_id", details.place_id);
+      let attractionIDRes = await getAttractionID("delete");
+      let currentUser = await getLoggedinUser("delete");
 
-      // If the id appears in the attractions table, allow the delete function to run.
-      if (data.length > 0) {
-        // Delete the attraction with the returned id from the previous query.
-        await supabase.from("attraction_favs").delete().eq("profile_id", currentUser._j).eq("attraction_id", data[0].id);
+      // If the id appears in the database, allow the delete function to run.
+      if (attractionIDRes.length > 0) {
+        // Delete the attraction with the returned id.
+        await supabase.from("attraction_favs").delete().eq("profile_id", currentUser).eq("attraction_id", attractionIDRes[0].id);
       }
     } catch (error) {
-      favorited.current = true;
-      setFavorite(favorited.current);
-      console.error(error);
+      likeErrorHandle(error, "delete");
     }
   };
 
   useEffect(() => {
-    // Set the heart icon to active if the attraction is found in the attraction_favs table.
-    if (attractionFavIDRes._j != null) {
-      favorited.current = true;
-      setFavorite(favorited.current);
-    }
-  }, [attractionFavIDRes]);
+    getAttractionFavStatus("Favorite");
+  }, []);
 
   return (
     <TouchableWithoutFeedback
       onPress={() => {
+        setScreenData({
+          att_name: details.name,
+          att_location: details.city,
+          att_rating: details.rating,
+          att_lat: details.latlng.lat,
+          att_lng: details.latlng.lng,
+          att_place_id: details.place_id,
+          att_thumbnail_url: details.thumbnail.uri,
+        });
         navigation.navigate("AttractionDetails", {
           name: details.name,
           rating: details.rating,

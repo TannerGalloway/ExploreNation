@@ -1,10 +1,11 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useContext } from "react";
 import { View, Text, Image, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, FlatList, TouchableOpacity } from "react-native";
 import { Button } from "@rneui/themed";
 import { FontAwesome, Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
+import { AppContext } from "../utils/AppContext";
 import * as Location from "expo-location";
 import AttractionCardDetailed from "../components/AttractionCardDetailed";
 import AccountIconModal from "../components/AccountIconModal";
@@ -21,6 +22,7 @@ export default function Home({ navigation }) {
   const [attractionData, setAttractionData] = useState([]);
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
+  const { setScreenData } = useContext(AppContext);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const errorImg = require("../assets/images/error_loading.jpg");
@@ -224,6 +226,13 @@ export default function Home({ navigation }) {
   const cityItem = ({ item }) => (
     <TouchableWithoutFeedback
       onPress={() => {
+        setScreenData({
+          destination_name: item.cityFullName,
+          destination_place_id: item.place_id,
+          destination_lat: item.latlng.lat,
+          destination_lng: item.latlng.lng,
+        });
+
         navigation.navigate("DestinationDetails", {
           name: item.cityFullName,
           place_id: item.place_id,
@@ -345,6 +354,13 @@ export default function Home({ navigation }) {
             key: GOOGLE_PLACES_API_KEY,
           }}
           onPress={(data, details) => {
+            setScreenData({
+              destination_name: details.formatted_address,
+              destination_place_id: details.place_id,
+              destination_lat: details.geometry.location.lat,
+              destination_lng: details.geometry.location.lng,
+            });
+
             navigation.navigate("DestinationDetails", {
               name: data.description,
               place_id: details.place_id,

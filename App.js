@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { TouchableWithoutFeedback } from "react-native";
 import { useFonts } from "expo-font";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./utils/supabaseClient";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { FontAwesome, Entypo } from "@expo/vector-icons";
 import "react-native-gesture-handler";
 import Welcome from "./screens/Welcome";
 import Login from "./screens/Login";
@@ -17,6 +15,8 @@ import BottomTabs from "./screens/BottomTabs";
 import AttractionDetails from "./screens/AttractionDetails";
 import DestinationDetails from "./screens/DestinationDetails";
 import Discover from "./screens/Discover";
+import ScreenHeader from "./components/ScreenHeader";
+import AppContextProvider from "./utils/AppContext";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -47,112 +47,84 @@ export default function App() {
   const Stack = createNativeStackNavigator();
 
   return (
-    <NavigationContainer>
-      <BottomSheetModalProvider>
-        <Stack.Navigator
-          initialRouteName="Welcome"
-          screenOptions={{
-            headerShown: false,
-          }}>
-          {session == null ? (
-            <>
-              <Stack.Screen
-                name="Welcome"
-                component={Welcome}
-                options={{
-                  animationTypeForReplace: session ? "push" : "pop",
-                }}
-              />
-              <Stack.Screen name="Register" component={Register} />
-              <Stack.Screen name="Login" component={Login} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-              <Stack.Screen name="ResetPassword" component={ResetPassword} />
-              <Stack.Screen name="CheckEmail" component={CheckEmail} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen
-                name="Current Tab"
-                component={BottomTabs}
-                options={{
-                  animationTypeForReplace: session ? "push" : "pop",
-                }}
-              />
-              <Stack.Screen
-                name="AttractionDetails"
-                component={AttractionDetails}
-                options={{
-                  headerShown: true,
-                  title: "",
-                  headerStyle: {
-                    backgroundColor: "#101d23",
-                  },
-                  headerTintColor: "#fff",
-                  headerShadowVisible: false,
-                  headerRight: () => (
-                    <>
-                      <TouchableWithoutFeedback
-                        onPress={() => {
-                          console.log("Liked");
-                        }}>
-                        <FontAwesome name="heart-o" size={24} color="white" />
-                      </TouchableWithoutFeedback>
-                      <TouchableWithoutFeedback
-                        onPress={() => {
-                          console.log("Shared");
-                        }}>
-                        <Entypo name="share" style={{ marginLeft: 35, marginRight: 10 }} size={24} color="white" />
-                      </TouchableWithoutFeedback>
-                    </>
-                  ),
-                }}
-              />
-              <Stack.Screen
-                name="DestinationDetails"
-                component={DestinationDetails}
-                options={{
-                  headerShown: true,
-                  title: "",
-                  headerStyle: {
-                    backgroundColor: "#101d23",
-                  },
-                  headerTintColor: "#fff",
-                  headerShadowVisible: false,
-                  headerRight: () => (
-                    <>
-                      <TouchableWithoutFeedback
-                        onPress={() => {
-                          console.log("Liked");
-                        }}>
-                        <FontAwesome name="heart-o" size={26} color="white" />
-                      </TouchableWithoutFeedback>
-                      <TouchableWithoutFeedback
-                        onPress={() => {
-                          console.log("Map Opened");
-                        }}>
-                        <FontAwesome name="map-marker" size={28} color="white" style={{ marginLeft: 35, marginRight: 10 }} />
-                      </TouchableWithoutFeedback>
-                    </>
-                  ),
-                }}
-              />
-              <Stack.Screen
-                name="Discover"
-                component={Discover}
-                options={{
-                  headerShown: true,
-                  title: "",
-                  headerStyle: {
-                    backgroundColor: "#101d23",
-                  },
-                  headerTintColor: "#fff",
-                  headerShadowVisible: false,
-                }}
-              />
-            </>
-          )}
-        </Stack.Navigator>
-      </BottomSheetModalProvider>
-    </NavigationContainer>
+    <AppContextProvider>
+      <NavigationContainer>
+        <BottomSheetModalProvider>
+          <Stack.Navigator
+            initialRouteName="Welcome"
+            screenOptions={{
+              headerShown: false,
+            }}>
+            {session == null ? (
+              <>
+                <Stack.Screen
+                  name="Welcome"
+                  component={Welcome}
+                  options={{
+                    animationTypeForReplace: session ? "push" : "pop",
+                  }}
+                />
+                <Stack.Screen name="Register" component={Register} />
+                <Stack.Screen name="Login" component={Login} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+                <Stack.Screen name="ResetPassword" component={ResetPassword} />
+                <Stack.Screen name="CheckEmail" component={CheckEmail} />
+              </>
+            ) : (
+              <>
+                <Stack.Screen
+                  name="Current Tab"
+                  component={BottomTabs}
+                  options={{
+                    animationTypeForReplace: session ? "push" : "pop",
+                  }}
+                />
+                <Stack.Screen
+                  name="AttractionDetails"
+                  component={AttractionDetails}
+                  options={{
+                    headerShown: true,
+                    title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                    headerRight: () => <ScreenHeader ScreenType={"AttractionDetails"} />,
+                  }}
+                />
+                <Stack.Screen
+                  name="DestinationDetails"
+                  component={DestinationDetails}
+                  options={{
+                    headerShown: true,
+                    title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                    headerRight: () => <ScreenHeader ScreenType={"DestinationDetails"} />,
+                  }}
+                />
+                <Stack.Screen
+                  name="Discover"
+                  component={Discover}
+                  options={{
+                    headerShown: true,
+                    title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                  }}
+                />
+              </>
+            )}
+          </Stack.Navigator>
+        </BottomSheetModalProvider>
+      </NavigationContainer>
+    </AppContextProvider>
   );
 }

@@ -1,8 +1,11 @@
+import { useContext } from "react";
 import { View, Text, ImageBackground, StyleSheet, TouchableWithoutFeedback, useWindowDimensions } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { AppContext } from "../utils/AppContext";
 
 export default function AttractionCardDetailed({ navigation, details }) {
   const width = useWindowDimensions().width;
+  const { setScreenData } = useContext(AppContext);
 
   const formatPopNum = (number) => {
     const formatter = Intl.NumberFormat("en", { notation: "compact" });
@@ -12,6 +15,16 @@ export default function AttractionCardDetailed({ navigation, details }) {
   return (
     <TouchableWithoutFeedback
       onPress={() => {
+        setScreenData({
+          att_name: details.name,
+          att_location: details.location,
+          att_rating: details.rating,
+          att_lat: details.latlng.lat,
+          att_lng: details.latlng.lng,
+          att_place_id: details.place_id,
+          att_total_reviews: details.total_reviews,
+          att_thumbnail_url: details.thumbnail.uri,
+        });
         navigation.navigate("AttractionDetails", {
           name: details.name,
           rating: details.rating,
@@ -19,6 +32,7 @@ export default function AttractionCardDetailed({ navigation, details }) {
           place_id: details.place_id,
           location: details.location,
           latlng: details.latlng,
+          total_reviews: details.total_reviews,
         });
       }}>
       <View>

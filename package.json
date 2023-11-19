@@ -24,7 +24,7 @@
     "expo-location": "~15.1.1",
     "formik": "^2.2.9",
     "react": "18.2.0",
-    "react-native": "0.71.13",
+    "react-native": "0.71.14",
     "react-native-animated-dots-carousel": "^1.0.2",
     "react-native-dotenv": "^3.4.8",
     "react-native-gesture-handler": "~2.9.0",
