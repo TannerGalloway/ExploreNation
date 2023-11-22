@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { View, ScrollView, Text, Image, StyleSheet, useWindowDimensions, FlatList } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
 import { Button } from "@rneui/themed";
 import { SERPAPI_KEY, API_NINJAS_KEY, WEATHER_API_KEY, GOOGLE_PLACES_API_KEY } from "@env";
+import { AppContext } from "../utils/AppContext";
 import AttractionCardDetailed from "../components/AttractionCardDetailed";
 
 export default function DestinationDetails({ navigation, route }) {
@@ -15,6 +16,7 @@ export default function DestinationDetails({ navigation, route }) {
   const [attractionData, setAttractionData] = useState([]);
   const [destinationDataLoading, setDestinationDataLoading] = useState(true);
   const [attractionDataLoading, SetAttractionDataLoading] = useState(true);
+  const { screenData } = useContext(AppContext);
   let destinationImgData = [];
   let popAttractionData = [];
   let destinationInfo = {};
@@ -28,18 +30,18 @@ export default function DestinationDetails({ navigation, route }) {
     total_reviews: 0,
   };
   if (route.params.country) {
-    destinationInfo.country = route.params.name.trim();
+    destinationInfo.country = screenData.destination_name.trim();
   } else {
-    destinationInfo.city = route.params.name.substring(0, route.params.name.indexOf(",")).trim();
-    destinationInfo.country = route.params.name.substring(route.params.name.lastIndexOf(",") + 1).trim();
-    destinationInfo.countryFullName = route.params.name.substring(route.params.name.indexOf(",") + 1).trim();
+    destinationInfo.city = screenData.destination_name.substring(0, screenData.destination_name.indexOf(",")).trim();
+    destinationInfo.country = screenData.destination_name.substring(screenData.destination_name.lastIndexOf(",") + 1).trim();
+    destinationInfo.countryFullName = screenData.destination_name.substring(screenData.destination_name.indexOf(",") + 1).trim();
   }
 
   const getDestinationInfo = async () => {
     try {
       // Get destination details
       const destinationDetailsRes = await fetch(
-        `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
+        `https://serpapi.com/search.json?engine=google_maps&place_id=${screenData.destination_place_id}&api_key=${SERPAPI_KEY}`
       );
 
       if (!destinationDetailsRes.ok) {
@@ -111,7 +113,7 @@ export default function DestinationDetails({ navigation, route }) {
       if (!route.params.country) {
         // Get weather info about the selected city.
         const weatherDataRes = await fetch(
-          `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${route.params.latlng.lat}, ${route.params.latlng.lng}`
+          `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${screenData.destination_lat}, ${screenData.destination_lng}`
         );
 
         if (!weatherDataRes.ok) {
@@ -165,7 +167,7 @@ export default function DestinationDetails({ navigation, route }) {
             rating: attractionRating.result.rating != undefined ? attractionRating.result.rating : 0,
             total_reviews: attractionRating.result.user_ratings_total != undefined ? attractionRating.result.user_ratings_total : 0,
             thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
-            location: route.params.name,
+            location: screenData.destination_name,
             latlng: attractionLocIDs.candidates[0].geometry.location,
             place_id: attractionLocIDs.candidates[0].place_id != "NOT_FOUND" ? attractionLocIDs.candidates[0].place_id : "NOT_FOUND",
           });
@@ -258,7 +260,10 @@ export default function DestinationDetails({ navigation, route }) {
                 {route.params.country ? null : <Text style={styles.subHeadingText}>{destinationData.countryFullName}</Text>}
               </View>
               <View style={[styles.headingView, { position: "relative" }]}>
-                <Image style={styles.headingImageStyle} source={route.params.country ? destinationData.flag : destinationData.weatherIcon} />
+                <Image
+                  style={[styles.headerImageBase, route.params.country ? styles.flagIcon : styles.weatherIcon]}
+                  source={route.params.country ? destinationData.flag : destinationData.weatherIcon}
+                />
                 {route.params.country ? null : <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>{destinationData.temp}°F</Text>}
               </View>
             </View>
@@ -349,10 +354,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  headingImageStyle: {
-    height: 75,
-    width: 94,
+  headerImageBase: {
+    height: 65,
     borderRadius: 5,
+  },
+
+  flagIcon: {
+    width: 94,
+  },
+
+  weatherIcon: {
+    width: 75,
   },
 
   attImgPreview: {

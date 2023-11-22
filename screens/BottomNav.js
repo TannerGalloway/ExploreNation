@@ -6,7 +6,7 @@ import Discover from "./Discover";
 
 const Tab = createBottomTabNavigator();
 
-export default function NavTabs() {
+export default function BottomNav() {
   return (
     <Tab.Navigator
       initialRouteName="Home"

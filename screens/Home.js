@@ -140,6 +140,7 @@ export default function Home({ navigation }) {
   const getNearbyAttractions = async () => {
     let attractionInfo = [];
     let attLocation = "";
+    let attThumbnail = errorImg;
 
     if (attLoadingOnScreenLeave.current) {
       attSectionLoading = true;
@@ -190,10 +191,15 @@ export default function Home({ navigation }) {
 
         // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews, thumbnail, location(latitude, longitude, city) and attraction id.
         for (let i = 0; i < attractionResponse.results.length; i++) {
-          const attImageResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
-            { signal: apiResController.current.signal }
-          );
+          if (attractionResponse.results[i].photos != undefined) {
+            const attImageResponse = await fetch(
+              `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionResponse.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
+              { signal: apiResController.current.signal }
+            );
+            attThumbnail = { uri: attImageResponse.url };
+          } else {
+            attThumbnail = errorImg;
+          }
 
           const locationCode = attractionResponse.results[i].plus_code;
 
@@ -206,7 +212,7 @@ export default function Home({ navigation }) {
             name: attractionResponse.results[i].name,
             rating: attractionResponse.results[i].rating != undefined ? attractionResponse.results[i].rating : 0,
             total_reviews: attractionResponse.results[i].user_ratings_total != undefined ? attractionResponse.results[i].user_ratings_total : 0,
-            thumbnail: attImageResponse.ok ? { uri: attImageResponse.url } : errorImg,
+            thumbnail: attThumbnail,
             location: attLocation,
             latlng: attractionResponse.results[i].geometry.location,
             place_id: attractionResponse.results[i].place_id != "NOT_FOUND" ? attractionResponse.results[i].place_id : "NOT_FOUND",
@@ -355,16 +361,13 @@ export default function Home({ navigation }) {
           }}
           onPress={(data, details) => {
             setScreenData({
-              destination_name: details.formatted_address,
+              destination_name: data.description,
               destination_place_id: details.place_id,
               destination_lat: details.geometry.location.lat,
               destination_lng: details.geometry.location.lng,
             });
 
             navigation.navigate("DestinationDetails", {
-              name: data.description,
-              place_id: details.place_id,
-              latlng: details.geometry.location,
               country: data.types.includes("country"),
             });
           }}

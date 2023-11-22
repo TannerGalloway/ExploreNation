@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { View, ScrollView, Text, Image, StyleSheet, useWindowDimensions } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
@@ -7,19 +7,21 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Button } from "@rneui/themed";
 import { SERPAPI_KEY } from "@env";
 import Map from "../components/Map";
+import { AppContext } from "../utils/AppContext";
 
-export default function AttractionDetails({ route }) {
+export default function AttractionDetails() {
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
   const [attractionData, setAttractionData] = useState([]);
   const [attDataLoading, setAttDataLoading] = useState(true);
+  const { screenData } = useContext(AppContext);
   let attImageData = [];
   let attractionInfo = {};
   const dataErrorObj = {
     attType: "Unknown",
     description: "Unable to find info.",
-    photos: Object.values(route.params.thumbnail),
+    photos: Object.values(screenData.att_thumbnail_url),
   };
 
   const getAttractionInfo = async () => {
@@ -27,7 +29,7 @@ export default function AttractionDetails({ route }) {
     try {
       // Get additional attraction details
       const attractionDetailsRes = await fetch(
-        `https://serpapi.com/search.json?engine=google_maps&place_id=${route.params.place_id}&api_key=${SERPAPI_KEY}`
+        `https://serpapi.com/search.json?engine=google_maps&place_id=${screenData.att_place_id}&api_key=${SERPAPI_KEY}`
       );
 
       // Error handling api request.
@@ -142,10 +144,10 @@ export default function AttractionDetails({ route }) {
             <View>
               {/* Top Heading View */}
               <View style={styles.headingView}>
-                <Text style={styles.title}>{route.params.name}</Text>
+                <Text style={styles.title}>{screenData.att_name}</Text>
                 <View style={styles.ratingView}>
                   <FontAwesome name="star" size={15} color="#f3cc4b" style={{ marginTop: 13, marginRight: 6 }} />
-                  <Text style={styles.subText}>{route.params.rating}</Text>
+                  <Text style={styles.subText}>{screenData.att_rating}</Text>
                 </View>
               </View>
 
@@ -153,7 +155,7 @@ export default function AttractionDetails({ route }) {
               <View style={styles.headingView}>
                 <View style={styles.mapMarkerIconView}>
                   <FontAwesome name="map-marker" size={26} color="#00A8DA" style={{ paddingRight: 10 }} />
-                  <Text style={styles.location}>{route.params.location}</Text>
+                  <Text style={styles.location}>{screenData.att_location}</Text>
                 </View>
                 <Text style={[styles.subText, { alignSelf: "flex-end" }]}>{attractionData.attType}</Text>
               </View>
@@ -164,7 +166,7 @@ export default function AttractionDetails({ route }) {
             <Text style={{ color: "#919196", fontSize: 14, marginTop: 5 }}>{attractionData.description}</Text>
             <Text style={[styles.title, styles.spacingTopBottom]}>Location</Text>
             <View style={[styles.mapView, { height: height / 3 }]}>
-              <Map latlng={route.params.latlng} />
+              <Map lat={screenData.att_lat} lng={screenData.att_lng} />
             </View>
           </>
         )}

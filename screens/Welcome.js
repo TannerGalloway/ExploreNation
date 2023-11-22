@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 import { Animated, Text, View, StyleSheet, TouchableHighlight } from "react-native";
-import useFirstRender from "../utils/FirstRender";
 
 export default function Welcome({ navigation }) {
   // Store array image index in state.
@@ -13,9 +12,6 @@ export default function Welcome({ navigation }) {
 
   // Keeps track of what array the currently viewed image is from.
   const activeArray = useRef(1);
-
-  // Check for first render
-  const firstRender = useFirstRender();
 
   // 2 Arrays of Images
   const images1 = [
@@ -36,9 +32,7 @@ export default function Welcome({ navigation }) {
 
   // Call the fade in fuction on a new re render when either CurrentImageIndex1 or 2 State Changes after 10 secs.
   useEffect(() => {
-    if (firstRender) {
-      activeArray.current == 0 ? (activeArray.current = 1) : (activeArray.current = 0);
-    }
+    activeArray.current == 0 ? (activeArray.current = 1) : (activeArray.current = 0);
     const delay = setTimeout(fadeOut, 10000);
     return () => clearTimeout(delay);
   }, [currentImageIndex1, currentImageIndex2]);

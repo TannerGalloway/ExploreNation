@@ -134,16 +134,9 @@ export default function AttractionCardGeneric({ navigation, details }) {
           att_lat: details.latlng.lat,
           att_lng: details.latlng.lng,
           att_place_id: details.place_id,
-          att_thumbnail_url: details.thumbnail.uri,
+          att_thumbnail_url: details.thumbnail,
         });
-        navigation.navigate("AttractionDetails", {
-          name: details.name,
-          rating: details.rating,
-          thumbnail: details.thumbnail,
-          place_id: details.place_id,
-          location: details.city,
-          latlng: details.latlng,
-        });
+        navigation.navigate("AttractionDetails");
       }}>
       <View style={[styles.backdropBorder, styles.attractionCardView, details.id % 2 === 1 ? { marginRight: 0 } : { marginRight: 18 }]}>
         <TouchableWithoutFeedback

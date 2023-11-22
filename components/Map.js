@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import mapStyle from "../utils/mapStyleDark.json";
 
-export default function Map({ latlng }) {
+export default function Map(props) {
   return (
     <MapView
       provider="google"
@@ -12,12 +12,12 @@ export default function Map({ latlng }) {
       loadingIndicatorColor="#00A8DA"
       loadingBackgroundColor="#101d23"
       initialRegion={{
-        latitude: latlng.lat,
-        longitude: latlng.lng,
+        latitude: props.lat,
+        longitude: props.lng,
         latitudeDelta: 0.0822,
         longitudeDelta: 0.0421,
       }}>
-      <Marker pinColor={"#356EED"} coordinate={{ latitude: latlng.lat, longitude: latlng.lng }} />
+      <Marker pinColor={"#356EED"} coordinate={{ latitude: props.lat, longitude: props.lng }} />
     </MapView>
   );
 }

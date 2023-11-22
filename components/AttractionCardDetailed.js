@@ -7,7 +7,7 @@ export default function AttractionCardDetailed({ navigation, details }) {
   const width = useWindowDimensions().width;
   const { setScreenData } = useContext(AppContext);
 
-  const formatPopNum = (number) => {
+  const formatRating = (number) => {
     const formatter = Intl.NumberFormat("en", { notation: "compact" });
     return formatter.format(number);
   };
@@ -23,17 +23,9 @@ export default function AttractionCardDetailed({ navigation, details }) {
           att_lng: details.latlng.lng,
           att_place_id: details.place_id,
           att_total_reviews: details.total_reviews,
-          att_thumbnail_url: details.thumbnail.uri,
+          att_thumbnail_url: details.thumbnail,
         });
-        navigation.navigate("AttractionDetails", {
-          name: details.name,
-          rating: details.rating,
-          thumbnail: details.thumbnail,
-          place_id: details.place_id,
-          location: details.location,
-          latlng: details.latlng,
-          total_reviews: details.total_reviews,
-        });
+        navigation.navigate("AttractionDetails");
       }}>
       <View>
         <ImageBackground style={[styles.attImgPreview, { width: width / 2.45 }]} imageStyle={styles.backdropBorder} source={details.thumbnail}>
@@ -41,7 +33,7 @@ export default function AttractionCardDetailed({ navigation, details }) {
             <Text style={styles.attractionText}>{`${details.name}`}</Text>
             <View style={{ flexDirection: "row" }}>
               <FontAwesome name="star" size={13} color="#f3cc4b" style={{ marginTop: 3, marginRight: 6 }} />
-              <Text style={{ color: "#d3d3d3" }}>{`${details.rating} (${formatPopNum(details.total_reviews)})`}</Text>
+              <Text style={{ color: "#d3d3d3" }}>{`${details.rating} (${formatRating(details.total_reviews)})`}</Text>
             </View>
           </View>
         </ImageBackground>

@@ -87,7 +87,7 @@ export default function ScreenHeader(props) {
             att_lat: screenData.att_lat,
             att_lng: screenData.att_lng,
             att_place_id: screenData.att_place_id,
-            att_thumbnail_url: screenData.att_thumbnail_url,
+            att_thumbnail_url: screenData.att_thumbnail_url.uri,
             att_total_reviews: screenData.att_total_reviews,
           })
           .select("id");

@@ -11,7 +11,7 @@ import Register from "./screens/Register";
 import ForgotPassword from "./screens/ForgotPassword";
 import ResetPassword from "./screens/ResetPassword";
 import CheckEmail from "./screens/CheckEmail";
-import BottomTabs from "./screens/BottomTabs";
+import BottomNav from "./screens/BottomNav";
 import AttractionDetails from "./screens/AttractionDetails";
 import DestinationDetails from "./screens/DestinationDetails";
 import Discover from "./screens/Discover";
@@ -33,14 +33,14 @@ export default function App() {
   }, []);
 
   // Load Fonts
-  const [loaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     RalewayRegular: require("./assets/fonts/Raleway-Regular.ttf"),
     RalewayMedium: require("./assets/fonts/Raleway-Medium.ttf"),
     RalewaySemiBold: require("./assets/fonts/Raleway-SemiBold.ttf"),
     RalewayBold: require("./assets/fonts/Raleway-Bold.ttf"),
   });
 
-  if (!loaded) {
+  if (!fontsLoaded) {
     return null;
   }
 
@@ -74,7 +74,7 @@ export default function App() {
               <>
                 <Stack.Screen
                   name="Current Tab"
-                  component={BottomTabs}
+                  component={BottomNav}
                   options={{
                     animationTypeForReplace: session ? "push" : "pop",
                   }}
