@@ -159,8 +159,8 @@ export default function ScreenHeader(props) {
   const addDestinationfavorite = async () => {
     try {
       let destinationIDRes = await getDestinationID("add");
-      let destinationID = destinationIDRes[0];
       let currentUser = await getLoggedinUser("add");
+      let destinationID = destinationIDRes[0];
 
       if (destinationIDRes.length == 0) {
         // Insert destination data into the database.
@@ -171,6 +171,8 @@ export default function ScreenHeader(props) {
             destination_place_id: screenData.destination_place_id,
             destination_lat: screenData.destination_lat,
             destination_lng: screenData.destination_lng,
+            destination_thumbnail: screenData.destination_thumbnail,
+            destination_isCountry: screenData.destination_isCountry,
           })
           .select("id");
         destinationID = data[0];

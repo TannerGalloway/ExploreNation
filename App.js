@@ -17,6 +17,7 @@ import DestinationDetails from "./screens/DestinationDetails";
 import Discover from "./screens/Discover";
 import ScreenHeader from "./components/ScreenHeader";
 import AppContextProvider from "./utils/AppContext";
+import Favorites from "./screens/Favorites";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -110,6 +111,19 @@ export default function App() {
                 <Stack.Screen
                   name="Discover"
                   component={Discover}
+                  options={{
+                    headerShown: true,
+                    title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="Favorites"
+                  component={Favorites}
                   options={{
                     headerShown: true,
                     title: "",

@@ -5,7 +5,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome5, Feather, MaterialIcons, Foundation } from "@expo/vector-icons";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import AccountIconModal from "../components/AccountIconModal";
-import AttractionCardGeneric from "../components/AttractionCardGeneric";
+import GenericCardDesign from "../components/GenericCardDesign";
 
 export default function Discover({ navigation }) {
   const accountIconModalRef = useRef(null);
@@ -123,7 +123,7 @@ export default function Discover({ navigation }) {
                 attractionData.results[randDataIndex].name > 30
                   ? attractionData.results[randDataIndex].name.substring(0, 30) + "..."
                   : attractionData.results[randDataIndex].name,
-              city: locationName,
+              location: locationName,
               thumbnail: attThumbnail,
               rating: attractionData.results[randDataIndex].rating != undefined ? attractionData.results[randDataIndex].rating : 0,
               place_id: attractionData.results[randDataIndex].place_id != "NOT_FOUND" ? attractionData.results[randDataIndex].place_id : "NOT_FOUND",
@@ -293,7 +293,7 @@ export default function Discover({ navigation }) {
         <FlatList
           contentContainerStyle={{ paddingBottom: 20 }}
           data={attractions}
-          renderItem={({ item }) => <AttractionCardGeneric navigation={navigation} details={item} />}
+          renderItem={({ item }) => <GenericCardDesign navigation={navigation} details={item} currentScreen={"Attractions"} />}
           showsVerticalScrollIndicator={false}
           numColumns={2}
           ListEmptyComponent={

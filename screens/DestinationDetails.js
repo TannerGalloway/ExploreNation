@@ -16,7 +16,7 @@ export default function DestinationDetails({ navigation, route }) {
   const [attractionData, setAttractionData] = useState([]);
   const [destinationDataLoading, setDestinationDataLoading] = useState(true);
   const [attractionDataLoading, SetAttractionDataLoading] = useState(true);
-  const { screenData } = useContext(AppContext);
+  const { screenData, setScreenData } = useContext(AppContext);
   let destinationImgData = [];
   let popAttractionData = [];
   let destinationInfo = {};
@@ -66,6 +66,14 @@ export default function DestinationDetails({ navigation, route }) {
               ? destinationDetails.place_results.description.snippet
               : "Unable to gather information about this destination.";
           destinationInfo.photos = destinationImgData;
+          setScreenData({
+            destination_name: screenData.destination_name,
+            destination_place_id: screenData.destination_place_id,
+            destination_lat: screenData.destination_lat,
+            destination_lng: screenData.destination_lng,
+            destination_thumbnail: destinationInfo.photos[0],
+            destination_isCountry: screenData.isCountry,
+          });
         }
       }
 

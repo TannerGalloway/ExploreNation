@@ -106,7 +106,7 @@ export default function Home({ navigation }) {
                 cityInfo.push({
                   city: selectedCity,
                   cityFullName: selectedCityFullName,
-                  image: cityImage.ok ? { uri: cityImage.url } : errorImg,
+                  thumbnail: cityImage.ok ? { uri: cityImage.url } : errorImg,
                   place_id: cityResData.candidates[cityImgIndex].place_id,
                   latlng: cityResData.candidates[cityImgIndex].geometry.location,
                   id: i,
@@ -115,7 +115,7 @@ export default function Home({ navigation }) {
                 cityInfo.push({
                   city: selectedCity,
                   cityFullName: selectedCityFullName,
-                  image: errorImg,
+                  thumbnail: errorImg,
                   id: i,
                 });
               }
@@ -183,7 +183,7 @@ export default function Home({ navigation }) {
           name: "Unknown",
           rating: 0,
           total_reviews: 0,
-          image: errorImg,
+          thumbnail: errorImg,
           location: "Unknown",
         });
       } else {
@@ -239,15 +239,11 @@ export default function Home({ navigation }) {
           destination_lng: item.latlng.lng,
         });
 
-        navigation.navigate("DestinationDetails", {
-          name: item.cityFullName,
-          place_id: item.place_id,
-          latlng: item.latlng,
-        });
+        navigation.navigate("DestinationDetails");
       }}>
       <View
         style={[styles.backdropBorder, { backgroundColor: "#252B34", width: width / 3.4 }, item.id == 5 ? { marginRight: 0 } : { marginRight: 18 }]}>
-        <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.image} />
+        <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.thumbnail} />
         <View style={styles.cityNameView}>
           <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
           <Text style={styles.homeResultsHeading}>{item.city}</Text>
@@ -365,6 +361,7 @@ export default function Home({ navigation }) {
               destination_place_id: details.place_id,
               destination_lat: details.geometry.location.lat,
               destination_lng: details.geometry.location.lng,
+              destination_isCountry: data.types.includes("country"),
             });
 
             navigation.navigate("DestinationDetails", {
