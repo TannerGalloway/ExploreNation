@@ -78,7 +78,7 @@ export default function Discover({ navigation }) {
             }
 
             // Get the images associated with the selected attraction based on the photo reference id returned.
-            if (Object.keys(attractionData.results[randDataIndex]).includes("photos")) {
+            if (Object.keys(attractionData.results[randDataIndex] != undefined ? attractionData.results[randDataIndex] : {}).includes("photos")) {
               const attImageResponse = await fetch(
                 `https://maps.googleapis.com/maps/api/place/photo?photoreference=${attractionData.results[randDataIndex].photos[0].photo_reference}&maxheight=205&key=${GOOGLE_PLACES_API_KEY}`,
                 { signal: apiResController.current.signal }
@@ -88,13 +88,14 @@ export default function Discover({ navigation }) {
               attThumbnail = errorImg;
             }
 
-            locationCode = attractionData.results[randDataIndex].plus_code;
+            locationCode = attractionData.results[randDataIndex].plus_code != undefined ? attractionData.results[randDataIndex].plus_code : undefined;
 
             // Loop through the returned data in search of a new attraction that contains a location.
             for (let i = 0; i <= attractionData.results.length; i++) {
               if (locationCode == undefined) {
                 randDataIndex = genRandNum(attractionData.results.length);
-                locationCode = attractionData.results[randDataIndex].plus_code;
+                locationCode =
+                  attractionData.results[randDataIndex].plus_code != undefined ? attractionData.results[randDataIndex].plus_code : undefined;
                 if (i == attractionData.results.length && locationCode == undefined) {
                   let locationAddress = attractionData.results[randDataIndex].formatted_address;
                   locationName = getCityCountry(locationAddress);

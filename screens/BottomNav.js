@@ -11,14 +11,26 @@ export default function BottomNav() {
   return (
     <Tab.Navigator
       initialRouteName="Home"
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: styles.tabsContainer,
         tabBarLabelStyle: styles.tabLabel,
-      }}>
-      <Tab.Screen name="Home" options={{ tabBarIcon: () => <Entypo name="home" size={24} color="white" /> }} component={Home} />
-      <Tab.Screen name="Discover" options={{ tabBarIcon: () => <Ionicons name="compass" size={24} color="white" /> }} component={Discover} />
-      <Tab.Screen name="Favorites" options={{ tabBarIcon: () => <FontAwesome name="heart" size={24} color="white" /> }} component={Favorites} />
+        tabBarIcon: ({ focused }) => {
+          switch (route.name) {
+            case "Home":
+              return <Entypo name="home" size={24} color={focused ? "#00A8DA" : "white"} />;
+
+            case "Discover":
+              return <Ionicons name="compass" size={24} color={focused ? "#00A8DA" : "white"} />;
+
+            case "Favorites":
+              return <FontAwesome name="heart" size={24} color={focused ? "#00A8DA" : "white"} />;
+          }
+        },
+      })}>
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Discover" component={Discover} />
+      <Tab.Screen name="Favorites" component={Favorites} />
     </Tab.Navigator>
   );
 }
