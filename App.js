@@ -18,6 +18,7 @@ import Discover from "./screens/Discover";
 import ScreenHeader from "./components/ScreenHeader";
 import AppContextProvider from "./utils/AppContext";
 import Favorites from "./screens/Favorites";
+import Map from "./screens/Map";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -132,6 +133,17 @@ export default function App() {
                     },
                     headerTintColor: "#fff",
                     headerShadowVisible: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="Map"
+                  component={Map}
+                  options={{
+                    headerShown: true,
+                    headerTransparent: true,
+                    cardOverlayEnabled: true,
+                    headerTintColor: "#fff",
+                    title: "",
                   }}
                 />
               </>

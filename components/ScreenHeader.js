@@ -3,11 +3,13 @@ import { TouchableWithoutFeedback } from "react-native";
 import { FontAwesome, Entypo } from "@expo/vector-icons";
 import { supabase } from "../utils/supabaseClient";
 import { AppContext } from "../utils/AppContext";
+import { useNavigation } from "@react-navigation/native";
 
-export default function ScreenHeader(props) {
+export default function ScreenHeader({ ScreenType }) {
   const [favorite, setfavorite] = useState(false);
   let favorited = useRef(false);
   const { screenData } = useContext(AppContext);
+  const navigation = useNavigation();
 
   const getLoggedinUser = async (funcCallName) => {
     try {
@@ -204,7 +206,7 @@ export default function ScreenHeader(props) {
   };
 
   useEffect(() => {
-    props.ScreenType == "AttractionDetails" ? getAttractionFavStatus("favorite") : getDestinationFavStatus("favorite");
+    ScreenType == "AttractionDetails" ? getAttractionFavStatus("favorite") : getDestinationFavStatus("favorite");
   }, []);
 
   return (
@@ -214,14 +216,14 @@ export default function ScreenHeader(props) {
           favorited.current = !favorited.current;
           setfavorite(!favorite);
           if (favorited.current) {
-            props.ScreenType == "AttractionDetails" ? addAttractionfavorite() : addDestinationfavorite();
+            ScreenType == "AttractionDetails" ? addAttractionfavorite() : addDestinationfavorite();
           } else {
-            props.ScreenType == "AttractionDetails" ? deleteAttractionfavorite() : deleteDestinationfavorite();
+            ScreenType == "AttractionDetails" ? deleteAttractionfavorite() : deleteDestinationfavorite();
           }
         }}>
         <FontAwesome name={favorite ? "heart" : "heart-o"} size={24} color={favorite ? "#ea4c8a" : "white"} />
       </TouchableWithoutFeedback>
-      {props.ScreenType == "AttractionDetails" ? (
+      {ScreenType == "AttractionDetails" ? (
         <TouchableWithoutFeedback
           onPress={() => {
             console.log("Shared");
@@ -231,7 +233,11 @@ export default function ScreenHeader(props) {
       ) : (
         <TouchableWithoutFeedback
           onPress={() => {
-            console.log("Map Opened");
+            navigation.navigate("Map", {
+              destination_lat: screenData.destination_lat,
+              destination_lng: screenData.destination_lng,
+              destination_isCountry: screenData.destination_isCountry,
+            });
           }}>
           <FontAwesome name="map-marker" size={28} color="white" style={{ marginLeft: 35, marginRight: 10 }} />
         </TouchableWithoutFeedback>

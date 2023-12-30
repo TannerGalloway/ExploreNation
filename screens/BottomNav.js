@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FontAwesome, Entypo, Ionicons } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5, Entypo, Ionicons } from "@expo/vector-icons";
 import Home from "./Home";
 import Discover from "./Discover";
 import Favorites from "./Favorites";
+import Map from "./Map";
 
 const Tab = createBottomTabNavigator();
 
@@ -25,12 +26,16 @@ export default function BottomNav() {
 
             case "Favorites":
               return <FontAwesome name="heart" size={24} color={focused ? "#00A8DA" : "white"} />;
+
+            case "Map":
+              return <FontAwesome5 name="map-marked-alt" size={24} color={focused ? "#00A8DA" : "white"} />;
           }
         },
       })}>
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Discover" component={Discover} />
       <Tab.Screen name="Favorites" component={Favorites} />
+      <Tab.Screen name="Map" component={Map} />
     </Tab.Navigator>
   );
 }

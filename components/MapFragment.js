@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import mapStyle from "../utils/mapStyleDark.json";
 
-export default function Map(props) {
+export default function MapFragment(props) {
   return (
     <MapView
       provider="google"

@@ -22,7 +22,7 @@ export default function Home({ navigation }) {
   const [attractionData, setAttractionData] = useState([]);
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
-  const { setScreenData } = useContext(AppContext);
+  const { setScreenData, setCurrentLocation } = useContext(AppContext);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const errorImg = require("../assets/images/error_loading.jpg");
@@ -171,6 +171,9 @@ export default function Home({ navigation }) {
     // Get the user's current location if user accepts the location propmpt.
     let position = await Location.getCurrentPositionAsync({});
 
+    // Set current location in app context.
+    setCurrentLocation({ location: position });
+
     try {
       // Get Nearby Attractions that are labled as tourist attractions and fall into a circle with a radius of 10 miles centered around the user's current location.
       const nearbyAttrationsResponse = await fetch(
@@ -272,7 +275,6 @@ export default function Home({ navigation }) {
       if (screenFirstVisit.current) {
         getCountryandCityInfo();
         getNearbyAttractions();
-
         // Check if the user has left the screen while data is loading.
       } else if (cityLoadingOnScreenLeave.current) {
         cityLoadingOnScreenLeave.current = false;

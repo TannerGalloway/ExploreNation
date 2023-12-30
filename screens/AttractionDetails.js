@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { FontAwesome } from "@expo/vector-icons";
 import { Button } from "@rneui/themed";
 import { SERPAPI_KEY } from "@env";
-import Map from "../components/Map";
+import MapFragment from "../components/MapFragment";
 import { AppContext } from "../utils/AppContext";
 
 export default function AttractionDetails() {
@@ -166,7 +166,7 @@ export default function AttractionDetails() {
             <Text style={{ color: "#919196", fontSize: 14, marginTop: 5 }}>{attractionData.description}</Text>
             <Text style={[styles.title, styles.spacingTopBottom]}>Location</Text>
             <View style={[styles.mapView, { height: height / 3 }]}>
-              <Map lat={screenData.att_lat} lng={screenData.att_lng} />
+              <MapFragment lat={screenData.att_lat} lng={screenData.att_lng} />
             </View>
           </>
         )}
