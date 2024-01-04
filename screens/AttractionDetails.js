@@ -41,8 +41,13 @@ export default function AttractionDetails() {
           attractionInfo = dataErrorObj;
         } else {
           attractionInfo = {
-            attType: attractionDetails.place_results.type[0],
-            description: attractionDetails.place_results.description,
+            attType: attractionDetails.place_results.type != undefined ? attractionDetails.place_results.type[0] : "Tourist Attraction",
+            description:
+              attractionDetails.place_results.description != undefined
+                ? attractionDetails.place_results.description.snippet
+                  ? attractionDetails.place_results.description.snippet
+                  : attractionDetails.place_results.description
+                : "Unable to find information about this attraction.",
           };
         }
       }
@@ -60,10 +65,12 @@ export default function AttractionDetails() {
           attImageData.push(attractionPhotos.photos[i].image);
         }
         attractionInfo = {
-          attType: attractionDetails.place_results.type[0],
+          attType: attractionDetails.place_results.type != undefined ? attractionDetails.place_results.type[0] : "Tourist Attraction",
           description:
             attractionDetails.place_results.description != undefined
-              ? attractionDetails.place_results.description
+              ? attractionDetails.place_results.description.snippet
+                ? attractionDetails.place_results.description.snippet
+                : attractionDetails.place_results.description
               : "Unable to find information about this attraction.",
           photos: attImageData,
         };

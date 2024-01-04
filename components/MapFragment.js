@@ -1,11 +1,11 @@
 import { StyleSheet } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import mapStyle from "../utils/mapStyleDark.json";
 
 export default function MapFragment(props) {
   return (
     <MapView
-      provider="google"
+      provider={PROVIDER_GOOGLE}
       style={styles.map}
       customMapStyle={mapStyle}
       loadingEnabled={true}
@@ -14,8 +14,8 @@ export default function MapFragment(props) {
       initialRegion={{
         latitude: props.lat,
         longitude: props.lng,
-        latitudeDelta: 0.0822,
-        longitudeDelta: 0.0421,
+        latitudeDelta: 0.0122,
+        longitudeDelta: 0.0122,
       }}>
       <Marker pinColor={"#356EED"} coordinate={{ latitude: props.lat, longitude: props.lng }} />
     </MapView>

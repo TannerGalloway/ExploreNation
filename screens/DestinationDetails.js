@@ -8,7 +8,7 @@ import { SERPAPI_KEY, API_NINJAS_KEY, WEATHER_API_KEY, GOOGLE_PLACES_API_KEY } f
 import { AppContext } from "../utils/AppContext";
 import AttractionCardDetailed from "../components/AttractionCardDetailed";
 
-export default function DestinationDetails({ navigation, route }) {
+export default function DestinationDetails({ navigation }) {
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
@@ -29,12 +29,17 @@ export default function DestinationDetails({ navigation, route }) {
     rating: 0,
     total_reviews: 0,
   };
-  if (route.params.country) {
+
+  if (screenData.destination_isCountry) {
     destinationInfo.country = screenData.destination_name.trim();
-  } else {
+  } else if (screenData.destination_name != undefined) {
     destinationInfo.city = screenData.destination_name.substring(0, screenData.destination_name.indexOf(",")).trim();
     destinationInfo.country = screenData.destination_name.substring(screenData.destination_name.lastIndexOf(",") + 1).trim();
     destinationInfo.countryFullName = screenData.destination_name.substring(screenData.destination_name.indexOf(",") + 1).trim();
+  } else {
+    destinationInfo.city = "Unknown";
+    destinationInfo.country = "Unknown";
+    destinationInfo.countryFullName = "Unknown";
   }
 
   const getDestinationInfo = async () => {
@@ -72,13 +77,13 @@ export default function DestinationDetails({ navigation, route }) {
             destination_lat: screenData.destination_lat,
             destination_lng: screenData.destination_lng,
             destination_thumbnail: destinationInfo.photos[0],
-            destination_isCountry: screenData.isCountry,
+            destination_isCountry: screenData.destination_isCountry,
           });
         }
       }
 
       // Get population of the selected city.
-      if (!route.params.country) {
+      if (!screenData.destination_isCountry) {
         const cityPopRes = await fetch(`https://api.api-ninjas.com/v1/city?name=${destinationInfo.city}`, {
           headers: { "X-Api-Key": `${API_NINJAS_KEY}` },
         });
@@ -106,7 +111,7 @@ export default function DestinationDetails({ navigation, route }) {
         destinationInfo.flag = require("../assets/images/error_loading.jpg");
       } else {
         destinationInfo.language = Object.values(countryDetails[0].languages)[0];
-        if (route.params.country) {
+        if (screenData.destination_isCountry) {
           destinationInfo.capital = countryDetails[0].capital[0];
           destinationInfo.flag = { uri: countryDetails[0].flags.png };
           destinationInfo.countryFullName = countryDetails[0].name.common;
@@ -118,7 +123,7 @@ export default function DestinationDetails({ navigation, route }) {
         }
       }
 
-      if (!route.params.country) {
+      if (!screenData.destination_isCountry) {
         // Get weather info about the selected city.
         const weatherDataRes = await fetch(
           `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${screenData.destination_lat}, ${screenData.destination_lng}`
@@ -144,11 +149,13 @@ export default function DestinationDetails({ navigation, route }) {
   };
 
   const getDestinationAttractionInfo = async () => {
+    let attractionRating = undefined;
+
     try {
       // Get popular attractions found in the selected destination.
       const popAttactionRes = await fetch(
         `https://serpapi.com/search.json?engine=google&q=Top+sights+in+${
-          route.params.country ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
+          screenData.destination_isCountry ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
         }+${destinationInfo.country.replace(/\s/g, "+")}&api_key=${SERPAPI_KEY}`
       );
       const popAttaction = await popAttactionRes.json();
@@ -159,32 +166,37 @@ export default function DestinationDetails({ navigation, route }) {
           const attractionLocIDRes = await fetch(
             `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=
             ${popAttaction.top_sights.sights[i].title.replace(/\s/g, "+")}+${
-              route.params.country ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
+              screenData.destination_isCountry ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
             }&inputtype=textquery&fields=place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
           );
           const attractionLocIDs = await attractionLocIDRes.json();
 
-          // Get the star rating and number of reviews the attraction currently has.
-          const attractionRatingRes = await fetch(
-            `https://maps.googleapis.com/maps/api/place/details/json?fields=rating%2Cuser_ratings_total&place_id=${attractionLocIDs.candidates[0].place_id}&key=${GOOGLE_PLACES_API_KEY}`
-          );
-          const attractionRating = await attractionRatingRes.json();
+          if (attractionLocIDs.status == "OK") {
+            // Get the star rating and number of reviews the attraction currently has.
+            const attractionRatingRes = await fetch(
+              `https://maps.googleapis.com/maps/api/place/details/json?fields=rating%2Cuser_ratings_total&place_id=${attractionLocIDs.candidates[0].place_id}&key=${GOOGLE_PLACES_API_KEY}`
+            );
+            attractionRating = await attractionRatingRes.json();
+          }
 
-          popAttractionData.push({
-            name: popAttaction.top_sights.sights[i].title,
-            rating: attractionRating.result.rating != undefined ? attractionRating.result.rating : 0,
-            total_reviews: attractionRating.result.user_ratings_total != undefined ? attractionRating.result.user_ratings_total : 0,
-            thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
-            location: screenData.destination_name,
-            latlng: attractionLocIDs.candidates[0].geometry.location,
-            place_id: attractionLocIDs.candidates[0].place_id != "NOT_FOUND" ? attractionLocIDs.candidates[0].place_id : "NOT_FOUND",
-          });
+          if (attractionLocIDs.candidates.length != 0) {
+            popAttractionData.push({
+              name: popAttaction.top_sights.sights[i].title,
+              rating: Object.keys(attractionRating.result).length != 0 ? attractionRating.result.rating : 0,
+              total_reviews: Object.keys(attractionRating.result).length != 0 ? attractionRating.result.user_ratings_total : 0,
+              thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
+              location: screenData.destination_name,
+              latlng: attractionLocIDs.candidates[0].geometry.location,
+              place_id: attractionLocIDs.candidates[0].place_id != "NOT_FOUND" ? attractionLocIDs.candidates[0].place_id : "NOT_FOUND",
+            });
+          }
         }
       }
     } catch (error) {
       popAttractionData = attDataErrorObj;
       console.error(error);
     }
+
     setAttractionData(popAttractionData);
     SetAttractionDataLoading(false);
   };
@@ -264,15 +276,17 @@ export default function DestinationDetails({ navigation, route }) {
             {/* City Heading */}
             <View style={styles.headingView}>
               <View style={{ width: width / 2 }}>
-                <Text style={styles.headingText}>{route.params.country ? destinationData.countryFullName : destinationData.city}</Text>
-                {route.params.country ? null : <Text style={styles.subHeadingText}>{destinationData.countryFullName}</Text>}
+                <Text style={styles.headingText}>{screenData.destination_isCountry ? destinationData.countryFullName : destinationData.city}</Text>
+                {screenData.destination_isCountry ? null : <Text style={styles.subHeadingText}>{destinationData.countryFullName}</Text>}
               </View>
               <View style={[styles.headingView, { position: "relative" }]}>
                 <Image
-                  style={[styles.headerImageBase, route.params.country ? styles.flagIcon : styles.weatherIcon]}
-                  source={route.params.country ? destinationData.flag : destinationData.weatherIcon}
+                  style={[styles.headerImageBase, screenData.destination_isCountry ? styles.flagIcon : styles.weatherIcon]}
+                  source={screenData.destination_isCountry ? destinationData.flag : destinationData.weatherIcon}
                 />
-                {route.params.country ? null : <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>{destinationData.temp}°F</Text>}
+                {screenData.destination_isCountry ? null : (
+                  <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>{destinationData.temp}°F</Text>
+                )}
               </View>
             </View>
 
@@ -288,8 +302,8 @@ export default function DestinationDetails({ navigation, route }) {
                 <Text style={styles.subHeadingText}>Language</Text>
               </View>
               <View>
-                <Text style={styles.headingText}>{route.params.country ? destinationData.capital : destinationData.currency}</Text>
-                <Text style={styles.subHeadingText}>{route.params.country ? "Capital" : "Currency"}</Text>
+                <Text style={styles.headingText}>{screenData.destination_isCountry ? destinationData.capital : destinationData.currency}</Text>
+                <Text style={styles.subHeadingText}>{screenData.destination_isCountry ? "Capital" : "Currency"}</Text>
               </View>
             </View>
             <Text style={[styles.description, styles.topSpacing]}>{destinationData.description}</Text>
@@ -406,5 +420,6 @@ const styles = StyleSheet.create({
     fontFamily: "RalewayBold",
     color: "white",
     lineHeight: 25,
+    marginBottom: 20,
   },
 });

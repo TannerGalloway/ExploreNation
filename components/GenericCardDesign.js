@@ -188,6 +188,7 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
             att_place_id: details.place_id,
             att_thumbnail_url: details.thumbnail,
           });
+
           navigation.navigate("AttractionDetails");
         } else {
           setScreenData({
@@ -196,10 +197,10 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
             destination_lat: details.lat,
             destination_lng: details.lng,
             destination_thumbnail: details.thumbnail,
+            destination_isCountry: details.isCountry,
           });
-          navigation.navigate("DestinationDetails", {
-            country: details.destination_isCountry,
-          });
+
+          navigation.navigate("DestinationDetails");
         }
       }}>
       <View style={[styles.backdropBorder, styles.cardView, details.id % 2 === 1 ? { marginRight: 0 } : { marginRight: 18 }]}>

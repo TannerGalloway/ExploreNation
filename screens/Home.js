@@ -240,6 +240,7 @@ export default function Home({ navigation }) {
           destination_place_id: item.place_id,
           destination_lat: item.latlng.lat,
           destination_lng: item.latlng.lng,
+          destination_isCountry: false,
         });
 
         navigation.navigate("DestinationDetails");

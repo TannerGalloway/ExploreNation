@@ -4,7 +4,7 @@ import { Button } from "@rneui/themed";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "../utils/supabaseClient";
 import AccountIconModal from "../components/AccountIconModal";
-import AttractionCardGeneric from "../components/GenericCardDesign";
+import GenericCardDesign from "../components/GenericCardDesign";
 
 export default function Favorites({ navigation }) {
   const accountIconModalRef = useRef(null);
@@ -258,7 +258,7 @@ export default function Favorites({ navigation }) {
         <FlatList
           contentContainerStyle={{ paddingBottom: 20 }}
           data={favorites}
-          renderItem={({ item }) => <AttractionCardGeneric navigation={navigation} details={item} currentScreen={selectedFilter.current} />}
+          renderItem={({ item }) => <GenericCardDesign navigation={navigation} details={item} currentScreen={selectedFilter.current} />}
           showsVerticalScrollIndicator={false}
           numColumns={2}
           ListEmptyComponent={
