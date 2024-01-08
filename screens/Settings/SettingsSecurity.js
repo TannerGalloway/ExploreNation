@@ -1,16 +1,13 @@
 import { useState } from "react";
-import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button } from "@rneui/themed";
-import { supabase } from "../utils/supabaseClient";
-import TextInput from "../components/TextInput";
-import PasswordInput from "../components/PasswordInput";
+import { supabase } from "../../utils/supabaseClient";
+import PasswordInput from "../../components/PasswordInput";
 
 // Form Validation Schema
 const validationSchema = Yup.object({
-  email: Yup.string().email("Invalid Email").required(""),
-
   password: Yup.string()
     .required("")
     .min(8, "Password must be 8 characters long")
@@ -24,15 +21,13 @@ const validationSchema = Yup.object({
     .oneOf([Yup.ref("password"), null], "Passwords don't match"),
 });
 
-export default function Register({ navigation }) {
-  const email_icon = require("../assets/images/email_icon.png");
+export default function PasswordSettings() {
   const [loading, setloading] = useState(false);
 
   // Submit form to server.
   const handleSubmit = async (values) => {
     setloading(true);
-    const { error } = await supabase.auth.signUp({
-      email: values.email,
+    const { error } = await supabase.auth.updateUser({
       password: values.password,
     });
 
@@ -40,30 +35,24 @@ export default function Register({ navigation }) {
       alert(error.message);
       setloading(false);
     }
+
+    values.password = "";
+    values.passwordConfirm = "";
+    setloading(false);
   };
 
   return (
     <Formik
-      initialValues={{ email: "", password: "", passwordConfirm: "" }}
+      initialValues={{ password: "", passwordConfirm: "" }}
       validateOnMount={true}
       validationSchema={validationSchema}
       validateOnChange={false}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
-        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-92}>
-          <Image style={styles.icon} source={email_icon} />
-
-          {/* Heading */}
-          <View>
-            <Text style={styles.heading}>Begin your Journey</Text>
-            <Text style={styles.subheading}>You're 1 step closer to Adventure.</Text>
-          </View>
-
-          <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
-
-          {/* Password */}
+        <View style={styles.container}>
+          {/* New Password */}
           <PasswordInput
-            placeholder="Password"
+            placeholder="New Password"
             type="Password"
             value={values.password}
             onChangeText={handleChange("password")}
@@ -72,9 +61,9 @@ export default function Register({ navigation }) {
             isValid={isValid}
           />
 
-          {/* Confirm Password */}
+          {/* Confirm New Password */}
           <PasswordInput
-            placeholder="Confirm Password"
+            placeholder="Confirm New Password"
             type="Confirm Password"
             value={values.passwordConfirm}
             onChangeText={handleChange("passwordConfirm")}
@@ -83,10 +72,10 @@ export default function Register({ navigation }) {
             isValid={isValid}
           />
 
-          {/* Sign In & Sign Up Button */}
+          {/* Submit Button*/}
           <View>
             <Button
-              title="Register"
+              title="Change Password"
               titleStyle={styles.buttonText}
               buttonStyle={styles.button}
               disabledStyle={{ backgroundColor: "#476D8E" }}
@@ -95,19 +84,8 @@ export default function Register({ navigation }) {
               loading={loading}
               onPress={handleSubmit}
             />
-
-            {/* Sign In & Sign Up Screen Link */}
-            <View style={styles.footer}>
-              <Text style={styles.accountMessage}>Already have an Account?</Text>
-              <Pressable
-                onPress={() => {
-                  navigation.replace("Login");
-                }}>
-                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>Login</Text>
-              </Pressable>
-            </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       )}
     </Formik>
   );
@@ -117,33 +95,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#101d23",
-    padding: 20,
-  },
-
-  icon: {
-    height: 200,
-    width: 200,
-    position: "relative",
-    left: 70,
-  },
-
-  heading: {
-    color: "white",
-    fontFamily: "RalewaySemiBold",
-    fontSize: 30,
-    textAlign: "center",
-  },
-
-  subheading: {
-    color: "#919196",
-    fontFamily: "RalewayRegular",
-    fontSize: 14,
-    marginTop: 10,
-    textAlign: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
 
   button: {
     marginBottom: 30,
+    marginTop: 10,
     height: 61,
     justifyContent: "center",
     alignItems: "center",
@@ -155,16 +113,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontFamily: "RalewayBold",
     fontSize: 18,
-  },
-
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-  },
-
-  accountMessage: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 13,
   },
 });

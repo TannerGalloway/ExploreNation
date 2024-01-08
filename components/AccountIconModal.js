@@ -24,15 +24,12 @@ export default AccountIconModal = forwardRef((props, ref) => {
     props.modalVisableState(modalVisable);
   };
 
-  // Expose the "handleCloseModal" function to the parent using the ref passed in from the parent.
-  useImperativeHandle(ref, () => ({
-    handleCloseModal() {
-      setModalVisable(false);
-      bottomSheetRef.current?.dismiss();
-      Keyboard.dismiss();
-      props.modalVisableState(modalVisable);
-    },
-  }));
+  const handleCloseModal = () => {
+    setModalVisable(false);
+    bottomSheetRef.current?.dismiss();
+    Keyboard.dismiss();
+    props.modalVisableState(modalVisable);
+  };
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -41,6 +38,9 @@ export default AccountIconModal = forwardRef((props, ref) => {
       alert(error.message);
     }
   };
+
+  // Expose the "handleCloseModal" function to the parent using the ref passed in from the parent.
+  useImperativeHandle(ref, () => ({ handleCloseModal }));
 
   return (
     <View>
@@ -55,7 +55,11 @@ export default AccountIconModal = forwardRef((props, ref) => {
       />
       <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints} backgroundStyle={styles.listItemContainer}>
         <View>
-          <TouchableWithoutFeedback onPress={() => console.log("Settings")}>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              handleCloseModal();
+              props.navigation.navigate("Settings");
+            }}>
             <ListItem containerStyle={styles.listItemContainer}>
               <Feather name="settings" size={25} color="white" />
               <ListItem.Content>

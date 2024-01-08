@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button } from "@rneui/themed";
 import { supabase } from "../utils/supabaseClient";
-import EmailInput from "../components/EmailInput";
+import TextInput from "../components/TextInput";
 import PasswordInput from "../components/PasswordInput";
 
 // Form Validation Schema
@@ -55,7 +55,7 @@ export default function Login({ navigation }) {
             <Text style={styles.subheading}>Adventure awaits...once you Login.</Text>
           </View>
 
-          <EmailInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} />
+          <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
 
           <PasswordInput
             placeholder="Password"

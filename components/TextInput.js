@@ -2,7 +2,7 @@ import { View, StyleSheet } from "react-native";
 import { Input } from "@rneui/themed";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function EmailInput({ value, onChangeText, onBlur, error }) {
+export default function TextInput({ value, onChangeText, onBlur, error, type }) {
   return (
     <View style={styles.TextInputView}>
       <Input
@@ -11,7 +11,7 @@ export default function EmailInput({ value, onChangeText, onBlur, error }) {
           fontFamily: "RalewayBold",
         }}
         inputStyle={{ color: "white" }}
-        placeholder="Email"
+        placeholder={type == "email" ? "Email" : "Username"}
         placeholderTextColor="white"
         value={value}
         onChangeText={onChangeText}
@@ -20,7 +20,13 @@ export default function EmailInput({ value, onChangeText, onBlur, error }) {
         errorMessage={error}
         selectionColor="white"
         cursorColor="white"
-        leftIcon={<MaterialIcons style={{ paddingTop: 4 }} name="email" size={24} color="white" />}
+        leftIcon={
+          type == "email" ? (
+            <MaterialIcons style={{ paddingTop: 4 }} name="email" size={24} color="white" />
+          ) : (
+            <MaterialIcons name="edit" size={24} color="white" />
+          )
+        }
       />
     </View>
   );

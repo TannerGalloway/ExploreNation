@@ -268,7 +268,7 @@ export default function Discover({ navigation }) {
         </View>
         {/* Top Right View */}
         <View style={{ marginTop: 20 }}>
-          <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} />
+          <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} navigation={navigation} />
         </View>
       </View>
       {/* Filter Buttons */}

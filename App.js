@@ -19,6 +19,10 @@ import ScreenHeader from "./components/ScreenHeader";
 import AppContextProvider from "./utils/AppContext";
 import Favorites from "./screens/Favorites";
 import Map from "./screens/Map";
+import Settings from "./screens/Settings/SettingsMain";
+import SettingsSubMenu from "./screens/Settings/SettingsSubMenu";
+import PasswordSettings from "./screens/Settings/SettingsSecurity";
+import AccountSettings from "./screens/Settings/SettingsAccount";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -139,11 +143,63 @@ export default function App() {
                   name="Map"
                   component={Map}
                   options={{
+                    title: "",
                     headerShown: true,
                     headerTransparent: true,
                     cardOverlayEnabled: true,
                     headerTintColor: "#fff",
+                  }}
+                />
+                <Stack.Screen
+                  name="Settings"
+                  component={Settings}
+                  options={{
+                    headerShown: true,
+                    title: "Settings",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="SettingsSubMenu"
+                  component={SettingsSubMenu}
+                  options={{
+                    headerShown: true,
                     title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="PasswordSettings"
+                  component={PasswordSettings}
+                  options={{
+                    headerShown: true,
+                    title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="AccountSettings"
+                  component={AccountSettings}
+                  options={{
+                    headerShown: true,
+                    title: "",
+                    headerStyle: {
+                      backgroundColor: "#101d23",
+                    },
+                    headerTintColor: "#fff",
+                    headerShadowVisible: false,
                   }}
                 />
               </>

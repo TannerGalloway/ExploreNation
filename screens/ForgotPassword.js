@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvo
 import { Button } from "@rneui/themed";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import EmailInput from "../components/EmailInput";
+import TextInput from "../components/TextInput";
 
 // Form Validation Schema
 const validationSchema = Yup.object({
@@ -31,7 +31,7 @@ export default function ForgotPassword({ navigation }) {
             <Text style={styles.subheading}>Enter the Email associated with your account and we'll get you back to Exploring.</Text>
           </View>
 
-          <EmailInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} />
+          <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
 
           {/* Send Button */}
           <View>
