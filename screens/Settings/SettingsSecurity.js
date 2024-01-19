@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
-import { Button } from "@rneui/themed";
+import { Button, useTheme, useThemeMode } from "@rneui/themed";
 import { supabase } from "../../utils/supabaseClient";
 import PasswordInput from "../../components/PasswordInput";
 
@@ -21,8 +21,11 @@ const validationSchema = Yup.object({
     .oneOf([Yup.ref("password"), null], "Passwords don't match"),
 });
 
-export default function PasswordSettings() {
+export default function PasswordSettings({ navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   const [loading, setloading] = useState(false);
+  const styles = getStyles(theme);
 
   // Submit form to server.
   const handleSubmit = async (values) => {
@@ -40,6 +43,15 @@ export default function PasswordSettings() {
     values.passwordConfirm = "";
     setloading(false);
   };
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: mode == "light" ? "white" : "#101d23",
+      },
+      headerTintColor: mode == "light" ? "black" : "white",
+    });
+  }, []);
 
   return (
     <Formik
@@ -91,27 +103,29 @@ export default function PasswordSettings() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
 
-  button: {
-    marginBottom: 30,
-    marginTop: 10,
-    height: 61,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 100,
-    backgroundColor: "#00A8DA",
-  },
+    button: {
+      marginBottom: 30,
+      marginTop: 10,
+      height: 61,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 100,
+      backgroundColor: theme.colors.active,
+    },
 
-  buttonText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 18,
-  },
-});
+    buttonText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 18,
+    },
+  });
+};

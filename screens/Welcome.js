@@ -1,7 +1,11 @@
 import { useRef, useState, useEffect } from "react";
 import { Animated, Text, View, StyleSheet, TouchableHighlight } from "react-native";
+import { useTheme } from "@rneui/themed";
 
 export default function Welcome({ navigation }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   // Store array image index in state.
   const [currentImageIndex1, setCurrentImageIndex1] = useState(0);
   const [currentImageIndex2, setCurrentImageIndex2] = useState(0);
@@ -74,17 +78,17 @@ export default function Welcome({ navigation }) {
         </Text>
         <View style={styles.buttonsView}>
           <TouchableHighlight
-            style={[styles.button, { backgroundColor: "#00a8da" }]}
+            style={[styles.button, { backgroundColor: theme.colors.active }]}
             underlayColor="#005e70"
             onPress={() => {
               navigation.replace("Register");
             }}>
             <View>
-              <Text style={styles.buttonText}>Register</Text>
+              <Text style={[styles.buttonText, { color: "white" }]}>Register</Text>
             </View>
           </TouchableHighlight>
           <TouchableHighlight
-            style={[styles.button, { backgroundColor: "#101d23" }]}
+            style={[styles.button, { backgroundColor: theme.colors.background }]}
             underlayColor="#0A1317"
             onPress={() => {
               navigation.replace("Login");
@@ -99,54 +103,56 @@ export default function Welcome({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: "#101d23",
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: "center",
+      backgroundColor: theme.colors.background,
+    },
 
-  image: {
-    position: "absolute",
-    height: "100%",
-    width: "100%",
-  },
+    image: {
+      position: "absolute",
+      height: "100%",
+      width: "100%",
+    },
 
-  bottomScreen: {
-    flex: 1,
-    justifyContent: "flex-end",
-    margin: 17,
-  },
+    bottomScreen: {
+      flex: 1,
+      justifyContent: "flex-end",
+      margin: 17,
+    },
 
-  buttonsView: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    buttonsView: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  button: {
-    marginBottom: 20,
-    width: 150,
-    height: 61,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 100,
-  },
+    button: {
+      marginBottom: 20,
+      width: 150,
+      height: 61,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 100,
+    },
 
-  buttonText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 16,
-  },
+    buttonText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 16,
+    },
 
-  textFormat: {
-    marginBottom: 40,
-    color: "white",
-    fontFamily: "RalewayMedium",
-  },
+    textFormat: {
+      marginBottom: 40,
+      color: "white",
+      fontFamily: "RalewayMedium",
+    },
 
-  heading: {
-    fontSize: 38,
-    width: 268,
-    marginBottom: 15,
-  },
-});
+    heading: {
+      fontSize: 38,
+      width: 268,
+      marginBottom: 15,
+    },
+  });
+};

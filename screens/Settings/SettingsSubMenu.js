@@ -1,15 +1,18 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native";
-import { Dialog, CheckBox } from "@rneui/themed";
+import { Dialog, CheckBox, useTheme, useThemeMode } from "@rneui/themed";
 import { AppContext } from "../../utils/AppContext";
 
 export default function SettingsSubMenu({ navigation, route }) {
+  const { theme } = useTheme();
+  const { mode, setMode } = useThemeMode();
   const [appThemeModalVisable, setAppThemeModalVisable] = useState(false);
   const [tempDisplayModalVisable, setTempDisplayModalVisable] = useState(false);
   const modalSelection = useRef("App Theme");
   const modalOptions = useRef(["Light", "Dark"]);
   const { appTheme, setAppTheme, tempDisplay, setTempDisplay, prevAppTheme, setPrevAppTheme, prevTempDisplay, setPrevTempDisplay } =
     useContext(AppContext);
+  const styles = getStyles(theme);
 
   const togglePrefModal = (selection) => {
     if (selection == "App Theme") {
@@ -27,6 +30,13 @@ export default function SettingsSubMenu({ navigation, route }) {
     if (title == "App Theme") {
       if (appTheme != 1 || prevAppTheme != appTheme) {
         setAppTheme(prevAppTheme);
+        setMode(prevAppTheme == 1 ? "light" : "dark");
+        navigation.setOptions({
+          headerStyle: {
+            backgroundColor: prevAppTheme == 1 ? "white" : "#101d23",
+          },
+          headerTintColor: prevAppTheme == 1 ? "black" : "white",
+        });
       }
     } else {
       if (tempDisplay != 1 || prevTempDisplay != tempDisplay) {
@@ -42,19 +52,30 @@ export default function SettingsSubMenu({ navigation, route }) {
         cancelSelection(title);
         title == "App Theme" ? setAppThemeModalVisable(!appThemeModalVisable) : setTempDisplayModalVisable(!tempDisplayModalVisable);
       }}
-      overlayStyle={{ backgroundColor: "#252B34" }}>
-      <Dialog.Title title={title} titleStyle={{ color: "white" }} />
+      overlayStyle={{ backgroundColor: theme.colors.secondaryBackground }}>
+      <Dialog.Title title={title} titleStyle={{ color: theme.colors.text }} />
       {options.map((option, index) => (
         <CheckBox
           key={index}
           title={option}
-          titleProps={{ style: { color: "white", marginLeft: 10, fontWeight: 700 } }}
-          containerStyle={{ backgroundColor: "#252B34", borderWidth: 0 }}
+          titleProps={{ style: { color: theme.colors.text, marginLeft: 10, fontWeight: 700 } }}
+          containerStyle={{ backgroundColor: theme.colors.secondaryBackground, borderWidth: 0 }}
           checkedIcon="dot-circle-o"
           uncheckedIcon="circle-o"
           checked={title == "App Theme" ? appTheme === index + 1 : tempDisplay === index + 1}
           onPress={() => {
-            title == "App Theme" ? setAppTheme(index + 1) : setTempDisplay(index + 1);
+            if (title == "App Theme") {
+              setAppTheme(index + 1);
+              setMode(index + 1 == 1 ? "light" : "dark");
+              navigation.setOptions({
+                headerStyle: {
+                  backgroundColor: index + 1 == 1 ? "white" : "#101d23",
+                },
+                headerTintColor: index + 1 == 1 ? "black" : "white",
+              });
+            } else {
+              setTempDisplay(index + 1);
+            }
           }}
         />
       ))}
@@ -127,6 +148,16 @@ export default function SettingsSubMenu({ navigation, route }) {
         return null;
     }
   };
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: mode == "light" ? "white" : "#101d23",
+      },
+      headerTintColor: mode == "light" ? "black" : "white",
+    });
+  }, []);
+
   return (
     <View style={styles.container}>
       <RouteRender />
@@ -135,27 +166,29 @@ export default function SettingsSubMenu({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
 
-  sectionView: {
-    marginTop: 30,
-  },
+    sectionView: {
+      marginTop: 30,
+    },
 
-  title: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    fontSize: 16,
-  },
+    title: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      fontSize: 16,
+    },
 
-  subtitle: {
-    fontFamily: "RalewayMedium",
-    color: "#919196",
-    fontSize: 14,
-  },
-});
+    subtitle: {
+      fontFamily: "RalewayMedium",
+      color: theme.colors.subtext,
+      fontSize: 14,
+    },
+  });
+};

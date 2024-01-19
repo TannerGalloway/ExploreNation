@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, Image, TouchableWithoutFeedback } from "react-native";
+import { useTheme } from "@rneui/themed";
 import { AppContext } from "../utils/AppContext";
 import { supabase } from "../utils/supabaseClient";
 import { FontAwesome } from "@expo/vector-icons";
 
 export default function AttractionCardGeneric({ navigation, details, currentScreen }) {
+  const { theme } = useTheme();
   const [favorite, setFavorite] = useState(false);
   const { setScreenData } = useContext(AppContext);
   let favorited = useRef(false);
+  const styles = getStyles(theme);
 
   const getLoggedinUser = async (funcCallName) => {
     try {
@@ -219,7 +222,7 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
         <Image style={[styles.imgPreview, styles.backdropBorder]} source={details.thumbnail} />
         {currentScreen == "Attractions" ? <Text style={styles.resultsHeading}>{details.name}</Text> : null}
         <View style={styles.locationNameView}>
-          <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
+          <FontAwesome name="map-marker" size={18} color={theme.colors.active} style={{ marginTop: 10 }} />
           <Text style={[styles.resultsHeading, { fontFamily: "RalewayMedium" }]}>{details.location}</Text>
         </View>
       </View>
@@ -227,43 +230,45 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
   );
 }
 
-const styles = StyleSheet.create({
-  backdropBorder: {
-    borderRadius: 10,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    backdropBorder: {
+      borderRadius: 10,
+    },
 
-  cardView: {
-    flex: 1,
-    backgroundColor: "#252B34",
-    marginTop: 18,
-  },
+    cardView: {
+      flex: 1,
+      backgroundColor: theme.colors.secondaryBackground,
+      marginTop: 18,
+    },
 
-  likeBtn: {
-    backgroundColor: "white",
-    borderRadius: 30,
-    padding: 3,
-    position: "absolute",
-    top: 5,
-    right: 5,
-    zIndex: 1,
-  },
+    likeBtn: {
+      backgroundColor: "white",
+      borderRadius: 30,
+      padding: 3,
+      position: "absolute",
+      top: 5,
+      right: 5,
+      zIndex: 1,
+    },
 
-  imgPreview: {
-    height: 205,
-    width: "auto",
-  },
+    imgPreview: {
+      height: 205,
+      width: "auto",
+    },
 
-  resultsHeading: {
-    fontFamily: "RalewayBold",
-    fontSize: 13,
-    color: "white",
-    marginVertical: 7,
-    paddingHorizontal: 7,
-  },
+    resultsHeading: {
+      fontFamily: "RalewayBold",
+      fontSize: 13,
+      color: theme.colors.text,
+      marginVertical: 7,
+      paddingHorizontal: 7,
+    },
 
-  locationNameView: {
-    flexDirection: "row",
-    paddingHorizontal: 7,
-    paddingBottom: 7,
-  },
-});
+    locationNameView: {
+      flexDirection: "row",
+      paddingHorizontal: 7,
+      paddingBottom: 7,
+    },
+  });
+};

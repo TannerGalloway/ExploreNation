@@ -3,12 +3,14 @@ import { View, ScrollView, Text, Image, StyleSheet, useWindowDimensions, FlatLis
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
-import { Button } from "@rneui/themed";
+import { Button, useTheme, useThemeMode } from "@rneui/themed";
 import { SERPAPI_KEY, API_NINJAS_KEY, WEATHER_API_KEY, GOOGLE_PLACES_API_KEY } from "@env";
 import { AppContext } from "../utils/AppContext";
 import AttractionCardDetailed from "../components/AttractionCardDetailed";
 
 export default function DestinationDetails({ navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
@@ -16,7 +18,8 @@ export default function DestinationDetails({ navigation }) {
   const [attractionData, setAttractionData] = useState([]);
   const [destinationDataLoading, setDestinationDataLoading] = useState(true);
   const [attractionDataLoading, SetAttractionDataLoading] = useState(true);
-  const { screenData, setScreenData } = useContext(AppContext);
+  const { screenData, setScreenData, tempDisplay } = useContext(AppContext);
+  const styles = getStyles(theme);
   let destinationImgData = [];
   let popAttractionData = [];
   let destinationInfo = {};
@@ -134,7 +137,7 @@ export default function DestinationDetails({ navigation }) {
           destinationInfo.weatherIcon = require("../assets/images/weather_error.png");
         } else {
           const weatherData = await weatherDataRes.json();
-          destinationInfo.temp = Math.round(weatherData.current.temp_f);
+          destinationInfo.temp = tempDisplay == 1 ? Math.round(weatherData.current.temp_f) : Math.round(weatherData.current.temp_c);
           destinationInfo.weatherIcon =
             weatherData.current.condition.icon != null
               ? { uri: `https:${weatherData.current.condition.icon}` }
@@ -142,6 +145,13 @@ export default function DestinationDetails({ navigation }) {
         }
       }
     } catch (error) {
+      destinationInfo.temp = "-";
+      destinationInfo.language = "Unknown";
+      destinationInfo.currency = "Unknown";
+      destinationInfo.capital = "Unknown";
+      destinationInfo.population = "Unknown";
+      destinationInfo.flag = require("../assets/images/error_loading.jpg");
+      destinationInfo.weatherIcon = require("../assets/images/weather_error.png");
       console.error(error);
     }
     setDestinationData(destinationInfo);
@@ -207,6 +217,12 @@ export default function DestinationDetails({ navigation }) {
   };
 
   useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: mode == "light" ? "white" : "#101d23",
+      },
+      headerTintColor: mode == "light" ? "black" : "white",
+    });
     getDestinationInfo();
     getDestinationAttractionInfo();
   }, []);
@@ -249,24 +265,24 @@ export default function DestinationDetails({ navigation }) {
                 currentIndex={index}
                 maxIndicators={destinationData.photos.length}
                 activeIndicatorConfig={{
-                  color: "#00A8DA",
+                  color: theme.colors.active,
                   margin: 3,
                   opacity: 1,
                   size: 12,
                 }}
                 inactiveIndicatorConfig={{
-                  color: "white",
+                  color: theme.colors.text,
                   margin: 3,
                   opacity: 0.5,
                   size: 9,
                 }}
                 decreasingDots={[
                   {
-                    config: { color: "white", margin: 3, opacity: 0.5, size: 6 },
+                    config: { color: theme.colors.text, margin: 3, opacity: 0.5, size: 6 },
                     quantity: 1,
                   },
                   {
-                    config: { color: "white", margin: 3, opacity: 0.5, size: 4 },
+                    config: { color: theme.colors.text, margin: 3, opacity: 0.5, size: 4 },
                     quantity: 1,
                   },
                 ]}
@@ -285,7 +301,9 @@ export default function DestinationDetails({ navigation }) {
                   source={screenData.destination_isCountry ? destinationData.flag : destinationData.weatherIcon}
                 />
                 {screenData.destination_isCountry ? null : (
-                  <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>{destinationData.temp}°F</Text>
+                  <Text style={[styles.headingText, { marginLeft: 7, marginTop: 7 }]}>
+                    {destinationData.temp}°{tempDisplay == 1 ? "F" : "C"}
+                  </Text>
                 )}
               </View>
             </View>
@@ -336,90 +354,92 @@ export default function DestinationDetails({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 7,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 7,
+    },
 
-  imagePagination: {
-    flex: 0.1,
-    alignItems: "center",
-    marginTop: 20,
-  },
+    imagePagination: {
+      flex: 0.1,
+      alignItems: "center",
+      marginTop: 20,
+    },
 
-  headingText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 20,
-  },
+    headingText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 20,
+    },
 
-  subHeadingText: {
-    color: "#919196",
-    fontFamily: "RalewayMedium",
-    fontSize: 16,
-  },
+    subHeadingText: {
+      color: theme.colors.subtext,
+      fontFamily: "RalewayMedium",
+      fontSize: 16,
+    },
 
-  headingView: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    headingView: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  description: {
-    color: "white",
-    fontFamily: "RalewayRegular",
-  },
+    description: {
+      color: theme.colors.text,
+      fontFamily: "RalewayRegular",
+    },
 
-  topSpacing: {
-    marginTop: 20,
-  },
+    topSpacing: {
+      marginTop: 20,
+    },
 
-  headerImageBase: {
-    height: 65,
-    borderRadius: 5,
-  },
+    headerImageBase: {
+      height: 65,
+      borderRadius: 5,
+    },
 
-  flagIcon: {
-    width: 94,
-  },
+    flagIcon: {
+      width: 94,
+    },
 
-  weatherIcon: {
-    width: 75,
-  },
+    weatherIcon: {
+      width: 75,
+    },
 
-  attImgPreview: {
-    marginBottom: 15,
-    marginRight: 30,
-    justifyContent: "flex-end",
-    height: 130,
-  },
+    attImgPreview: {
+      marginBottom: 15,
+      marginRight: 30,
+      justifyContent: "flex-end",
+      height: 130,
+    },
 
-  attBackdropBorder: {
-    borderColor: "white",
-    borderWidth: 1,
-    borderRadius: 10,
-  },
+    attBackdropBorder: {
+      borderColor: theme.colors.text,
+      borderWidth: 1,
+      borderRadius: 10,
+    },
 
-  attractionTextView: {
-    backgroundColor: "rgba(52, 52, 52, 0.6)",
-    paddingHorizontal: 5,
-    paddingBottom: 3,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
-  },
+    attractionTextView: {
+      backgroundColor: "rgba(52, 52, 52, 0.6)",
+      paddingHorizontal: 5,
+      paddingBottom: 3,
+      borderBottomLeftRadius: 5,
+      borderBottomRightRadius: 5,
+    },
 
-  attractionText: {
-    fontFamily: "RalewayBold",
-    fontSize: 13,
-    color: "white",
-  },
+    attractionText: {
+      fontFamily: "RalewayBold",
+      fontSize: 13,
+      color: theme.colors.text,
+    },
 
-  noData: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    lineHeight: 25,
-    marginBottom: 20,
-  },
-});
+    noData: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      lineHeight: 25,
+      marginBottom: 20,
+    },
+  });
+};

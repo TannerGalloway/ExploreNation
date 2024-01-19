@@ -1,16 +1,20 @@
 import { StyleSheet } from "react-native";
+import { useTheme, useThemeMode } from "@rneui/themed";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import mapStyle from "../utils/mapStyleDark.json";
+import mapStyleDark from "../utils/mapStyleDark.json";
+import mapStyleLight from "../utils/mapStyleLight.json";
 
 export default function MapFragment(props) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   return (
     <MapView
       provider={PROVIDER_GOOGLE}
       style={styles.map}
-      customMapStyle={mapStyle}
+      customMapStyle={mode == "dark" ? mapStyleDark : mapStyleLight}
       loadingEnabled={true}
-      loadingIndicatorColor="#00A8DA"
-      loadingBackgroundColor="#101d23"
+      loadingIndicatorColor={theme.colors.active}
+      loadingBackgroundColor={theme.colors.background}
       initialRegion={{
         latitude: props.lat,
         longitude: props.lng,

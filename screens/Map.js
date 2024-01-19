@@ -3,17 +3,22 @@ import { View, StyleSheet, Text, Image, TouchableWithoutFeedback } from "react-n
 import { useFocusEffect } from "@react-navigation/native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
-import mapStyle from "../utils/mapStyleDark.json";
+import { useTheme, useThemeMode } from "@rneui/themed";
+import mapStyleDark from "../utils/mapStyleDark.json";
+import mapStyleLight from "../utils/mapStyleLight.json";
 import { AppContext } from "../utils/AppContext";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 
 export default function Map({ route, navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   const { currentLocation, setScreenData } = useContext(AppContext);
   const apiCallInProgress = useRef(false);
   const apiResController = useRef(null);
   const [attractionLocations, setAttractionLocations] = useState([]);
   const [attractionCardShown, setAttractionCardShown] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const styles = getStyles(theme);
   const errorImg = require("../assets/images/error_loading.jpg");
   const [region, setRegion] = useState({
     latitude: route.params != undefined ? route.params.destination_lat : currentLocation != null ? currentLocation.location.coords.latitude : 0,
@@ -158,11 +163,11 @@ export default function Map({ route, navigation }) {
             }}>
             <View style={styles.closeBtn}>
               <View style={styles.closeBackdrop} />
-              <AntDesign name="closecircle" size={24} color="#252B34" />
+              <AntDesign name="closecircle" size={24} color={theme.colors.background} />
             </View>
           </TouchableWithoutFeedback>
           <View style={{ flexDirection: "row" }}>
-            <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 3, marginRight: 5 }} />
+            <FontAwesome name="map-marker" size={18} color={theme.colors.active} style={{ marginTop: 3, marginRight: 5 }} />
             <Text style={styles.cardSubtitle}>{selectedMarker.att_location}</Text>
           </View>
           <View style={[styles.cardGroupContent, styles.cardFooter]}>
@@ -179,6 +184,10 @@ export default function Map({ route, navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      navigation.setOptions({
+        headerTintColor: mode == "light" ? "black" : "white",
+      });
+
       // When leaving the screen, cancel any api requests that are currently in progress.
       return () => {
         if (apiResController.current && apiCallInProgress.current) {
@@ -194,10 +203,10 @@ export default function Map({ route, navigation }) {
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         toolbarEnabled={false}
-        customMapStyle={mapStyle}
+        customMapStyle={mode == "dark" ? mapStyleDark : mapStyleLight}
         loadingEnabled={true}
-        loadingIndicatorColor="#00A8DA"
-        loadingBackgroundColor="#101d23"
+        loadingIndicatorColor={theme.colors.active}
+        loadingBackgroundColor={theme.colors.background}
         region={region}
         onRegionChangeComplete={changeRegion}>
         {route.params != undefined ? (
@@ -221,64 +230,66 @@ export default function Map({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  map: {
-    width: "100%",
-    height: "100%",
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    map: {
+      width: "100%",
+      height: "100%",
+    },
 
-  attractionCard: {
-    backgroundColor: "#101d23",
-    position: "absolute",
-    bottom: 30,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    borderRadius: 10,
-    overflow: "hidden",
-  },
+    attractionCard: {
+      backgroundColor: theme.colors.background,
+      position: "absolute",
+      bottom: 30,
+      left: 10,
+      right: 10,
+      flexDirection: "row",
+      borderRadius: 10,
+      overflow: "hidden",
+    },
 
-  cardTitle: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    marginBottom: 5,
-    marginRight: 10,
-  },
+    cardTitle: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      marginBottom: 5,
+      marginRight: 10,
+    },
 
-  cardSubtitle: {
-    fontFamily: "RalewayBold",
-    color: "#919196",
-  },
+    cardSubtitle: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.subtext,
+    },
 
-  rightContainer: {
-    flex: 1,
-    padding: 10,
-  },
+    rightContainer: {
+      flex: 1,
+      padding: 10,
+    },
 
-  cardGroupContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    cardGroupContent: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  cardFooter: {
-    position: "relative",
-    top: 10,
-    bottom: 0,
-  },
+    cardFooter: {
+      position: "relative",
+      top: 10,
+      bottom: 0,
+    },
 
-  closeBackdrop: {
-    height: 18,
-    width: 18,
-    backgroundColor: "white",
-    borderRadius: 50,
-    position: "absolute",
-    right: 4,
-    top: 4,
-  },
+    closeBackdrop: {
+      height: 18,
+      width: 18,
+      backgroundColor: theme.colors.text,
+      borderRadius: 50,
+      position: "absolute",
+      right: 4,
+      top: 4,
+    },
 
-  closeBtn: {
-    position: "absolute",
-    top: 5,
-    right: 7,
-  },
-});
+    closeBtn: {
+      position: "absolute",
+      top: 5,
+      right: 7,
+    },
+  });
+};

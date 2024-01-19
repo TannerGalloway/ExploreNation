@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, FlatList } from "react-native";
-import { Button } from "@rneui/themed";
+import { Button, useTheme, useThemeMode } from "@rneui/themed";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "../utils/supabaseClient";
 import AccountIconModal from "../components/AccountIconModal";
 import GenericCardDesign from "../components/GenericCardDesign";
 
 export default function Favorites({ navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   const accountIconModalRef = useRef(null);
   const screenFirstVisit = useRef(true);
   const loadingOnScreenLeave = useRef(false);
@@ -16,6 +18,7 @@ export default function Favorites({ navigation }) {
   const [modalVisable, setModalVisable] = useState(false);
   const [favorites, setfavorites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const styles = getStyles(theme);
   let screenLoading = true;
   let dataError = true;
 
@@ -162,6 +165,13 @@ export default function Favorites({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      navigation.setOptions({
+        headerStyle: {
+          backgroundColor: mode == "light" ? "white" : "#101d23",
+        },
+        headerTintColor: mode == "light" ? "black" : "white",
+      });
+
       // Inital call to run on first visit of the screen.
       if (screenFirstVisit.current) {
         getDestinationFavs();
@@ -213,7 +223,9 @@ export default function Favorites({ navigation }) {
           TouchableComponent={TouchableWithoutFeedback}
           buttonStyle={[
             styles.filterButton,
-            selectedFilter.current == "Destinations" ? { backgroundColor: "#00A8DA" } : { backgroundColor: "#252B34" },
+            selectedFilter.current == "Destinations"
+              ? { backgroundColor: theme.colors.active }
+              : { backgroundColor: theme.colors.secondaryBackground },
           ]}
           containerStyle={{ marginVertical: 10 }}
           titleStyle={styles.filterText}
@@ -230,7 +242,9 @@ export default function Favorites({ navigation }) {
           TouchableComponent={TouchableWithoutFeedback}
           buttonStyle={[
             styles.filterButton,
-            selectedFilter.current == "Attractions" ? { backgroundColor: "#00A8DA" } : { backgroundColor: "#252B34" },
+            selectedFilter.current == "Attractions"
+              ? { backgroundColor: theme.colors.active }
+              : { backgroundColor: theme.colors.secondaryBackground },
           ]}
           containerStyle={{ marginVertical: 10 }}
           titleStyle={styles.filterText}
@@ -287,83 +301,85 @@ export default function Favorites({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
 
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  filterRow: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-  },
+    filterRow: {
+      flexDirection: "row",
+      justifyContent: "flex-start",
+    },
 
-  heading: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 33,
-    marginTop: 20,
-  },
+    heading: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 33,
+      marginTop: 20,
+    },
 
-  subText: {
-    color: "#919196",
-    fontFamily: "RalewayMedium",
-    fontSize: 16,
-  },
+    subText: {
+      color: theme.colors.subtext,
+      fontFamily: "RalewayMedium",
+      fontSize: 16,
+    },
 
-  filterButton: {
-    borderRadius: 30,
-    marginRight: 10,
-  },
+    filterButton: {
+      borderRadius: 30,
+      marginRight: 10,
+    },
 
-  filterText: {
-    color: "white",
-    fontFamily: "RalewayMedium",
-    marginHorizontal: 10,
-  },
+    filterText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayMedium",
+      marginHorizontal: 10,
+    },
 
-  refreshButtonView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+    refreshButtonView: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
 
-  refreshButtonText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 16,
-  },
+    refreshButtonText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 16,
+    },
 
-  refreshButton: {
-    marginTop: 15,
-    height: 53,
-    width: 200,
-    borderRadius: 100,
-    backgroundColor: "#00A8DA",
-  },
+    refreshButton: {
+      marginTop: 15,
+      height: 53,
+      width: 200,
+      borderRadius: 100,
+      backgroundColor: theme.colors.active,
+    },
 
-  noData: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    textAlign: "center",
-    lineHeight: 25,
-    marginTop: 18,
-  },
+    noData: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      textAlign: "center",
+      lineHeight: 25,
+      marginTop: 18,
+    },
 
-  overlay: {
-    position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-});
+    overlay: {
+      position: "absolute",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1,
+    },
+  });
+};

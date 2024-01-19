@@ -4,18 +4,21 @@ import Carousel from "react-native-reanimated-carousel";
 import AnimatedDotsCarousel from "react-native-animated-dots-carousel";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { FontAwesome } from "@expo/vector-icons";
-import { Button } from "@rneui/themed";
+import { Button, useTheme, useThemeMode } from "@rneui/themed";
 import { SERPAPI_KEY } from "@env";
 import MapFragment from "../components/MapFragment";
 import { AppContext } from "../utils/AppContext";
 
-export default function AttractionDetails() {
+export default function AttractionDetails({ navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
   const [attractionData, setAttractionData] = useState([]);
   const [attDataLoading, setAttDataLoading] = useState(true);
   const { screenData } = useContext(AppContext);
+  const styles = getStyles(theme);
   let attImageData = [];
   let attractionInfo = {};
   const dataErrorObj = {
@@ -83,6 +86,12 @@ export default function AttractionDetails() {
   };
 
   useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: mode == "light" ? "white" : "#101d23",
+      },
+      headerTintColor: mode == "light" ? "black" : "white",
+    });
     getAttractionInfo();
   }, []);
 
@@ -123,24 +132,24 @@ export default function AttractionDetails() {
                 currentIndex={index}
                 maxIndicators={attractionData.photos.length}
                 activeIndicatorConfig={{
-                  color: "#00A8DA",
+                  color: theme.colors.active,
                   margin: 3,
                   opacity: 1,
                   size: 12,
                 }}
                 inactiveIndicatorConfig={{
-                  color: "white",
+                  color: theme.colors.text,
                   margin: 3,
                   opacity: 0.5,
                   size: 9,
                 }}
                 decreasingDots={[
                   {
-                    config: { color: "white", margin: 3, opacity: 0.5, size: 6 },
+                    config: { color: theme.colors.text, margin: 3, opacity: 0.5, size: 6 },
                     quantity: 1,
                   },
                   {
-                    config: { color: "white", margin: 3, opacity: 0.5, size: 4 },
+                    config: { color: theme.colors.text, margin: 3, opacity: 0.5, size: 4 },
                     quantity: 1,
                   },
                 ]}
@@ -161,7 +170,7 @@ export default function AttractionDetails() {
               {/* Bottom Heading View */}
               <View style={styles.headingView}>
                 <View style={styles.mapMarkerIconView}>
-                  <FontAwesome name="map-marker" size={26} color="#00A8DA" style={{ paddingRight: 10 }} />
+                  <FontAwesome name="map-marker" size={26} color={theme.colors.active} style={{ paddingRight: 10 }} />
                   <Text style={styles.location}>{screenData.att_location}</Text>
                 </View>
                 <Text style={[styles.subText, { alignSelf: "flex-end" }]}>{attractionData.attType}</Text>
@@ -170,7 +179,7 @@ export default function AttractionDetails() {
 
             {/* Body Content */}
             <Text style={[styles.title, styles.spacingTopBottom]}>About</Text>
-            <Text style={{ color: "#919196", fontSize: 14, marginTop: 5 }}>{attractionData.description}</Text>
+            <Text style={{ color: theme.colors.subtext, fontSize: 14, marginTop: 5 }}>{attractionData.description}</Text>
             <Text style={[styles.title, styles.spacingTopBottom]}>Location</Text>
             <View style={[styles.mapView, { height: height / 3 }]}>
               <MapFragment lat={screenData.att_lat} lng={screenData.att_lng} />
@@ -182,66 +191,68 @@ export default function AttractionDetails() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 7,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 7,
+    },
 
-  headingView: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    headingView: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  imagePagination: {
-    flex: 0.1,
-    alignItems: "center",
-    marginTop: 20,
-  },
+    imagePagination: {
+      flex: 0.1,
+      alignItems: "center",
+      marginTop: 20,
+    },
 
-  title: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 18,
-    maxWidth: 300,
-    marginTop: 10,
-  },
+    title: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 18,
+      maxWidth: 300,
+      marginTop: 10,
+    },
 
-  mapMarkerIconView: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    marginTop: 20,
-  },
+    mapMarkerIconView: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      marginTop: 20,
+    },
 
-  location: {
-    color: "#919196",
-    fontFamily: "RalewayBold",
-    fontSize: 15,
-  },
+    location: {
+      color: theme.colors.subtext,
+      fontFamily: "RalewayBold",
+      fontSize: 15,
+    },
 
-  subText: {
-    color: "#919196",
-    fontSize: 15,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
+    subText: {
+      color: theme.colors.subtext,
+      fontSize: 15,
+      fontWeight: "bold",
+      marginTop: 10,
+    },
 
-  ratingView: {
-    flexDirection: "row",
-    marginTop: 5,
-    justifyContent: "flex-end",
-  },
+    ratingView: {
+      flexDirection: "row",
+      marginTop: 5,
+      justifyContent: "flex-end",
+    },
 
-  spacingTopBottom: {
-    marginTop: 30,
-    marginBottom: 15,
-  },
+    spacingTopBottom: {
+      marginTop: 30,
+      marginBottom: 15,
+    },
 
-  mapView: {
-    marginBottom: 35,
-    borderRadius: 25,
-    overflow: "hidden",
-  },
-});
+    mapView: {
+      marginBottom: 35,
+      borderRadius: 25,
+      overflow: "hidden",
+    },
+  });
+};

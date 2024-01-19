@@ -1,12 +1,16 @@
-import { useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { useRef, useState, forwardRef, useImperativeHandle, useContext } from "react";
 import { View, StyleSheet, Keyboard, TouchableWithoutFeedback } from "react-native";
-import { Avatar, ListItem } from "@rneui/themed";
+import { Avatar, ListItem, useTheme } from "@rneui/themed";
 import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
 import { supabase } from "../utils/supabaseClient";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { AppContext } from "../utils/AppContext";
 
 export default AccountIconModal = forwardRef((props, ref) => {
+  const { theme } = useTheme();
   const bottomSheetRef = useRef(null);
+  const styles = getStyles(theme);
+  const { profilePic } = useContext(AppContext);
   const [modalVisable, setModalVisable] = useState(false);
   const snapPoints = ["21%"];
 
@@ -47,10 +51,10 @@ export default AccountIconModal = forwardRef((props, ref) => {
       <Avatar
         size={54}
         rounded
-        renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color="white" />}
+        renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color={theme.colors.icon} />}
         onPress={toggleModal}
         source={{
-          uri: "https://randomuser.me/api/portraits/men/36.jpg",
+          uri: profilePic,
         }}
       />
       <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints} backgroundStyle={styles.listItemContainer}>
@@ -61,7 +65,7 @@ export default AccountIconModal = forwardRef((props, ref) => {
               props.navigation.navigate("Settings");
             }}>
             <ListItem containerStyle={styles.listItemContainer}>
-              <Feather name="settings" size={25} color="white" />
+              <Feather name="settings" size={25} color={theme.colors.icon} />
               <ListItem.Content>
                 <ListItem.Title style={styles.listItemText}>Settings</ListItem.Title>
               </ListItem.Content>
@@ -69,7 +73,7 @@ export default AccountIconModal = forwardRef((props, ref) => {
           </TouchableWithoutFeedback>
           <TouchableWithoutFeedback onPress={handleSignOut}>
             <ListItem containerStyle={styles.listItemContainer}>
-              <MaterialIcons name="logout" size={25} color="white" />
+              <MaterialIcons name="logout" size={25} color={theme.colors.icon} />
               <ListItem.Content>
                 <ListItem.Title style={styles.listItemText}>Log Out</ListItem.Title>
               </ListItem.Content>
@@ -81,15 +85,17 @@ export default AccountIconModal = forwardRef((props, ref) => {
   );
 });
 
-const styles = StyleSheet.create({
-  listItemContainer: {
-    backgroundColor: "#252B34",
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    listItemContainer: {
+      backgroundColor: theme.colors.secondaryBackground,
+    },
 
-  listItemText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 20,
-    paddingBottom: 5,
-  },
-});
+    listItemText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 20,
+      paddingBottom: 5,
+    },
+  });
+};

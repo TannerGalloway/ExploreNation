@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
-import { Button } from "@rneui/themed";
+import { Button, useTheme } from "@rneui/themed";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import TextInput from "../components/TextInput";
@@ -11,8 +11,10 @@ const validationSchema = Yup.object({
 });
 
 export default function ForgotPassword({ navigation }) {
+  const { theme } = useTheme();
   const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
+  const styles = getStyles(theme);
 
   const handleSubmit = (values) => {
     alert(`Submitting: ${JSON.stringify(values)}`);
@@ -53,7 +55,7 @@ export default function ForgotPassword({ navigation }) {
                 onPress={() => {
                   navigation.replace("Login");
                 }}>
-                <Text style={[styles.accountMessage, { color: "#2282e3" }]}>Login</Text>
+                <Text style={[styles.accountMessage, { color: theme.colors.active }]}>Login</Text>
               </Pressable>
             </View>
           </View>
@@ -63,59 +65,61 @@ export default function ForgotPassword({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    padding: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: 20,
+    },
 
-  icon: {
-    height: 200,
-    width: 200,
-    position: "relative",
-    left: 70,
-  },
+    icon: {
+      height: 200,
+      width: 200,
+      position: "relative",
+      left: 70,
+    },
 
-  heading: {
-    color: "white",
-    fontFamily: "RalewaySemiBold",
-    fontSize: 28,
-    textAlign: "center",
-  },
+    heading: {
+      color: theme.colors.text,
+      fontFamily: "RalewaySemiBold",
+      fontSize: 28,
+      textAlign: "center",
+    },
 
-  subheading: {
-    color: "#919196",
-    fontFamily: "RalewayRegular",
-    fontSize: 14,
-    marginTop: 10,
-    textAlign: "center",
-  },
+    subheading: {
+      color: theme.colors.subtext,
+      fontFamily: "RalewayRegular",
+      fontSize: 14,
+      marginTop: 10,
+      textAlign: "center",
+    },
 
-  button: {
-    marginTop: 20,
-    marginBottom: 30,
-    height: 61,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 100,
-    backgroundColor: "#00A8DA",
-  },
+    button: {
+      marginTop: 20,
+      marginBottom: 30,
+      height: 61,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 100,
+      backgroundColor: theme.colors.active,
+    },
 
-  buttonText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 18,
-  },
+    buttonText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 18,
+    },
 
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-  },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "space-evenly",
+    },
 
-  accountMessage: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 13,
-  },
-});
+    accountMessage: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 13,
+    },
+  });
+};

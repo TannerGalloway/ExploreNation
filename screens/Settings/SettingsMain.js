@@ -1,6 +1,21 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { useTheme, useThemeMode } from "@rneui/themed";
 
 export default function Settings({ navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
+  const styles = getStyles(theme);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: mode == "light" ? "white" : "#101d23",
+      },
+      headerTintColor: mode == "light" ? "black" : "white",
+    });
+  }, [mode]);
+
   return (
     <View style={styles.container}>
       {/* Account Tab*/}
@@ -30,27 +45,29 @@ export default function Settings({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
 
-  sectionView: {
-    marginTop: 30,
-  },
+    sectionView: {
+      marginTop: 30,
+    },
 
-  title: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    fontSize: 18,
-  },
+    title: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      fontSize: 18,
+    },
 
-  subtitle: {
-    fontFamily: "RalewayMedium",
-    color: "#919196",
-    fontSize: 14,
-  },
-});
+    subtitle: {
+      fontFamily: "RalewayMedium",
+      color: theme.colors.subtext,
+      fontSize: 14,
+    },
+  });
+};

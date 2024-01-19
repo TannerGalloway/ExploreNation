@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { TouchableWithoutFeedback } from "react-native";
 import { FontAwesome, Entypo } from "@expo/vector-icons";
+import { useTheme } from "@rneui/themed";
 import { supabase } from "../utils/supabaseClient";
 import { AppContext } from "../utils/AppContext";
 import { useNavigation } from "@react-navigation/native";
 
 export default function ScreenHeader({ ScreenType }) {
+  const { theme } = useTheme();
   const [favorite, setfavorite] = useState(false);
   let favorited = useRef(false);
   const { screenData } = useContext(AppContext);
@@ -221,14 +223,14 @@ export default function ScreenHeader({ ScreenType }) {
             ScreenType == "AttractionDetails" ? deleteAttractionfavorite() : deleteDestinationfavorite();
           }
         }}>
-        <FontAwesome name={favorite ? "heart" : "heart-o"} size={24} color={favorite ? "#ea4c8a" : "white"} />
+        <FontAwesome name={favorite ? "heart" : "heart-o"} size={24} color={favorite ? "#ea4c8a" : theme.colors.icon} />
       </TouchableWithoutFeedback>
       {ScreenType == "AttractionDetails" ? (
         <TouchableWithoutFeedback
           onPress={() => {
             console.log("Shared");
           }}>
-          <Entypo name="share" style={{ marginLeft: 35, marginRight: 10 }} size={24} color="white" />
+          <Entypo name="share" style={{ marginLeft: 35, marginRight: 10 }} size={24} color={theme.colors.icon} />
         </TouchableWithoutFeedback>
       ) : (
         <TouchableWithoutFeedback
@@ -239,7 +241,7 @@ export default function ScreenHeader({ ScreenType }) {
               destination_isCountry: screenData.destination_isCountry,
             });
           }}>
-          <FontAwesome name="map-marker" size={28} color="white" style={{ marginLeft: 35, marginRight: 10 }} />
+          <FontAwesome name="map-marker" size={28} color={theme.colors.icon} style={{ marginLeft: 35, marginRight: 10 }} />
         </TouchableWithoutFeedback>
       )}
     </>

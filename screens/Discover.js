@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableWithoutFeedback, TouchableOpacity, FlatList } from "react-native";
-import { Button } from "@rneui/themed";
+import { Button, useTheme, useThemeMode } from "@rneui/themed";
 import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome5, Feather, MaterialIcons, Foundation } from "@expo/vector-icons";
 import { GOOGLE_PLACES_API_KEY } from "@env";
@@ -8,6 +8,8 @@ import AccountIconModal from "../components/AccountIconModal";
 import GenericCardDesign from "../components/GenericCardDesign";
 
 export default function Discover({ navigation }) {
+  const { theme } = useTheme();
+  const { mode } = useThemeMode();
   const accountIconModalRef = useRef(null);
   const screenFirstVisit = useRef(true);
   const loadingOnScreenLeave = useRef(false);
@@ -17,6 +19,7 @@ export default function Discover({ navigation }) {
   const [modalVisable, setModalVisable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [attractions, setAttractions] = useState([]);
+  const styles = getStyles(theme);
   const errorImg = require("../assets/images/error_loading.jpg");
   let screenLoading = true;
   let dataError = true;
@@ -182,23 +185,27 @@ export default function Discover({ navigation }) {
     let filterIcon = {};
     switch (title.title) {
       case "Cultural":
-        filterIcon = <Feather name="globe" size={24} color={selectedFilter.current == "Cultural" ? "#00A8DA" : "white"} />;
+        filterIcon = <Feather name="globe" size={24} color={selectedFilter.current == "Cultural" ? theme.colors.active : theme.colors.text} />;
         break;
 
       case "Nature":
-        filterIcon = <Foundation name="mountains" size={24} color={selectedFilter.current == "Nature" ? "#00A8DA" : "white"} />;
+        filterIcon = <Foundation name="mountains" size={24} color={selectedFilter.current == "Nature" ? theme.colors.active : theme.colors.text} />;
         break;
 
       case "Food":
-        filterIcon = <FontAwesome5 name="utensils" size={24} color={selectedFilter.current == "Food" ? "#00A8DA" : "white"} />;
+        filterIcon = <FontAwesome5 name="utensils" size={24} color={selectedFilter.current == "Food" ? theme.colors.active : theme.colors.text} />;
         break;
 
       case "Night Life":
-        filterIcon = <MaterialIcons name="nightlife" size={24} color={selectedFilter.current == "Night Life" ? "#00A8DA" : "white"} />;
+        filterIcon = (
+          <MaterialIcons name="nightlife" size={24} color={selectedFilter.current == "Night Life" ? theme.colors.active : theme.colors.text} />
+        );
         break;
 
       case "Shopping":
-        filterIcon = <MaterialIcons name="shopping-bag" size={24} color={selectedFilter.current == "Shopping" ? "#00A8DA" : "white"} />;
+        filterIcon = (
+          <MaterialIcons name="shopping-bag" size={24} color={selectedFilter.current == "Shopping" ? theme.colors.active : theme.colors.text} />
+        );
         break;
     }
     return (
@@ -229,6 +236,13 @@ export default function Discover({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      navigation.setOptions({
+        headerStyle: {
+          backgroundColor: mode == "light" ? "white" : "#101d23",
+        },
+        headerTintColor: mode == "light" ? "black" : "white",
+      });
+
       // Inital call to run on first visit of the screen.
       if (screenFirstVisit.current) {
         getWorldAttractions(selectedFilter.current);
@@ -323,80 +337,82 @@ export default function Discover({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
 
-  heading: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 33,
-    marginTop: 20,
-  },
+    heading: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 33,
+      marginTop: 20,
+    },
 
-  subText: {
-    color: "#919196",
-    fontFamily: "RalewayMedium",
-    fontSize: 16,
-  },
+    subText: {
+      color: theme.colors.subtext,
+      fontFamily: "RalewayMedium",
+      fontSize: 16,
+    },
 
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  filterButton: {
-    backgroundColor: "#252B34",
-    borderRadius: 30,
-    width: 50,
-  },
+    filterButton: {
+      backgroundColor: theme.colors.secondaryBackground,
+      borderRadius: 30,
+      width: 50,
+    },
 
-  filterText: {
-    color: "white",
-    fontFamily: "RalewayMedium",
-    textAlign: "center",
-    marginBottom: 10,
-  },
+    filterText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayMedium",
+      textAlign: "center",
+      marginBottom: 10,
+    },
 
-  refreshButtonView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+    refreshButtonView: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
 
-  refreshButtonText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 16,
-  },
+    refreshButtonText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 16,
+    },
 
-  refreshButton: {
-    marginTop: 15,
-    height: 53,
-    width: 200,
-    borderRadius: 100,
-    backgroundColor: "#00A8DA",
-  },
+    refreshButton: {
+      backgroundColor: theme.colors.active,
+      marginTop: 15,
+      height: 53,
+      width: 200,
+      borderRadius: 100,
+    },
 
-  noData: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    textAlign: "center",
-    lineHeight: 25,
-    marginTop: 18,
-  },
+    noData: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      textAlign: "center",
+      lineHeight: 25,
+      marginTop: 18,
+    },
 
-  overlay: {
-    position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-});
+    overlay: {
+      position: "absolute",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1,
+    },
+  });
+};

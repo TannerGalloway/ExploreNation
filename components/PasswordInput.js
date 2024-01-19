@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { Feather, Entypo } from "@expo/vector-icons";
-import { Input } from "@rneui/themed";
+import { Input, useTheme } from "@rneui/themed";
 
 export default function PasswordInput({ placeholder, type, value, onChangeText, onBlur, error, isValid }) {
+  const { theme } = useTheme();
   const [hidePassword, setPwdVisable] = useState(true);
+  const styles = getStyles(theme);
 
   // Password Visibility Icon Change
   let iconName = null;
@@ -18,25 +20,25 @@ export default function PasswordInput({ placeholder, type, value, onChangeText, 
           borderBottomWidth: 0,
           fontFamily: "RalewayBold",
         }}
-        inputStyle={{ color: "white" }}
+        inputStyle={{ color: theme.colors.text }}
         placeholder={placeholder}
-        placeholderTextColor="white"
+        placeholderTextColor={theme.colors.text}
         value={value}
         secureTextEntry={hidePassword}
         onChangeText={onChangeText}
         onBlur={onBlur}
         errorStyle={{ color: "red", marginTop: 12 }}
         errorMessage={error}
-        selectionColor="white"
-        cursorColor="white"
-        leftIcon={<Entypo name="lock" size={24} color="white" />}
+        selectionColor={theme.colors.text}
+        cursorColor={theme.colors.text}
+        leftIcon={<Entypo name="lock" size={24} color={theme.colors.icon} />}
         rightIcon={
           // Show or Hide Password Button
           <Pressable
             onPress={() => {
               setPwdVisable(!hidePassword);
             }}>
-            <Feather name={iconName} size={24} color="white" />
+            <Feather name={iconName} size={24} color={theme.colors.icon} />
           </Pressable>
         }
       />
@@ -45,30 +47,33 @@ export default function PasswordInput({ placeholder, type, value, onChangeText, 
   );
 }
 
-const styles = StyleSheet.create({
-  TextInputView: {
-    backgroundColor: "#252B34",
-    height: 65,
-    borderRadius: 15,
-    paddingTop: 10,
-    marginTop: 20,
-    marginBottom: 30,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    TextInputView: {
+      backgroundColor: theme.colors.secondaryBackground,
+      height: 65,
+      borderRadius: 15,
+      paddingTop: 10,
+      marginTop: 20,
+      marginBottom: 30,
+    },
 
-  pwdSubheading: {
-    position: "relative",
-    color: "#919196",
-    fontFamily: "RalewayRegular",
-    fontSize: 13,
-    bottom: 15,
-    marginLeft: 10,
-  },
-  pwdSubheadingErrorPresent: {
-    position: "relative",
-    color: "#919196",
-    fontFamily: "RalewayRegular",
-    fontSize: 13,
-    bottom: 5,
-    marginLeft: 15,
-  },
-});
+    pwdSubheading: {
+      position: "relative",
+      color: theme.colors.subtext,
+      fontFamily: "RalewayRegular",
+      fontSize: 13,
+      bottom: 15,
+      marginLeft: 10,
+    },
+
+    pwdSubheadingErrorPresent: {
+      position: "relative",
+      color: theme.colors.subtext,
+      fontFamily: "RalewayRegular",
+      fontSize: 13,
+      bottom: 5,
+      marginLeft: 15,
+    },
+  });
+};

@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useContext } from "react";
 import { View, Text, Image, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, FlatList, TouchableOpacity } from "react-native";
-import { Button } from "@rneui/themed";
+import { supabase } from "../utils/supabaseClient";
+import { Button, useTheme } from "@rneui/themed";
 import { FontAwesome, Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -11,6 +12,7 @@ import AttractionCardDetailed from "../components/AttractionCardDetailed";
 import AccountIconModal from "../components/AccountIconModal";
 
 export default function Home({ navigation }) {
+  const { theme } = useTheme();
   const accountIconModalRef = useRef(null);
   const searchbarRef = useRef(null);
   const screenFirstVisit = useRef(true);
@@ -22,14 +24,35 @@ export default function Home({ navigation }) {
   const [attractionData, setAttractionData] = useState([]);
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
-  const { setScreenData, setCurrentLocation } = useContext(AppContext);
+  const { setScreenData, setCurrentLocation, setUsername, setProfilePic } = useContext(AppContext);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
+  const styles = getStyles(theme);
   const errorImg = require("../assets/images/error_loading.jpg");
   let attTimeout = null;
   let locationErrorMsg = "Unable to locate attractions nearby. \nMake sure your Location Services are turned on.";
   let citySectionLoading = true;
   let attSectionLoading = true;
+
+  const loadUserData = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { data, error } = await supabase.from("profiles").select("username, profilePic_uri").match({ id: user.id });
+
+    if (error) {
+      setProfilePic(`https://ui-avatars.com/api/?name=${user.email.slice(0, user.email.indexOf("@"))}`);
+    }
+
+    setUsername(data[0].username);
+
+    setProfilePic(
+      data[0].profilePic_uri == null
+        ? `https://ui-avatars.com/api/?name=${user.email.slice(0, user.email.indexOf("@"))}&background=0D8ABC&color=fff`
+        : data[0].profilePic_uri
+    );
+  };
 
   const getCountryandCityInfo = async () => {
     let cityInfo = [];
@@ -246,10 +269,14 @@ export default function Home({ navigation }) {
         navigation.navigate("DestinationDetails");
       }}>
       <View
-        style={[styles.backdropBorder, { backgroundColor: "#252B34", width: width / 3.4 }, item.id == 5 ? { marginRight: 0 } : { marginRight: 18 }]}>
+        style={[
+          styles.backdropBorder,
+          { backgroundColor: theme.colors.secondaryBackground, width: width / 3.4 },
+          item.id == 5 ? { marginRight: 0 } : { marginRight: 18 },
+        ]}>
         <Image style={[styles.imgPreview, styles.cityImgBorder, styles.backdropBorder]} source={item.thumbnail} />
         <View style={styles.cityNameView}>
-          <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ marginTop: 10 }} />
+          <FontAwesome name="map-marker" size={18} color={theme.colors.active} style={{ marginTop: 10 }} />
           <Text style={styles.homeResultsHeading}>{item.city}</Text>
         </View>
       </View>
@@ -269,6 +296,8 @@ export default function Home({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      loadUserData();
+
       // Clear the searchbar when navigating to the home screen.
       const searchBarClear = navigation.addListener("focus", () => searchbarRef.current?.clear());
 
@@ -332,7 +361,7 @@ export default function Home({ navigation }) {
         <Feather
           name="search"
           size={24}
-          color="white"
+          color={theme.colors.text}
           style={{
             paddingTop: 40,
             paddingLeft: 5,
@@ -350,8 +379,8 @@ export default function Home({ navigation }) {
           listEmptyComponent={() => <NoResults errorMsg={"No results were found"} />}
           renderRow={(rowData) => (
             <View style={{ flexDirection: "row" }}>
-              <FontAwesome name="map-marker" size={18} color="#00A8DA" style={{ paddingRight: 10 }} />
-              <Text style={{ color: "white" }}>{rowData.description}</Text>
+              <FontAwesome name="map-marker" size={18} color={theme.colors.active} style={{ paddingRight: 10 }} />
+              <Text style={{ color: theme.colors.text }}>{rowData.description}</Text>
             </View>
           )}
           query={{
@@ -367,34 +396,32 @@ export default function Home({ navigation }) {
               destination_isCountry: data.types.includes("country"),
             });
 
-            navigation.navigate("DestinationDetails", {
-              country: data.types.includes("country"),
-            });
+            navigation.navigate("DestinationDetails");
           }}
           textInputProps={{
-            placeholderTextColor: "white",
+            placeholderTextColor: theme.colors.text,
           }}
           styles={{
             textInput: {
-              backgroundColor: "#252B34",
+              backgroundColor: theme.colors.secondaryBackground,
               fontFamily: "RalewayBold",
               borderBottomWidth: 0,
               height: 65,
               borderRadius: 15,
               paddingLeft: 34,
               marginTop: 20,
-              color: "white",
+              color: theme.colors.text,
             },
             row: {
-              backgroundColor: "#252B34",
+              backgroundColor: theme.colors.secondaryBackground,
               padding: 13,
               height: 44,
               flexDirection: "row",
             },
             separator: {
               height: 1,
-              backgroundColor: "white",
-              color: "white",
+              backgroundColor: theme.colors.text,
+              color: theme.colors.text,
             },
           }}
         />
@@ -450,121 +477,123 @@ export default function Home({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101d23",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
+const getStyles = (theme) => {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
 
-  topElements: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+    topElements: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
 
-  greeting: {
-    color: "#919196",
-    fontFamily: "RalewayBold",
-    fontSize: 20,
-    marginTop: 20,
-    marginBottom: 10,
-  },
+    greeting: {
+      color: theme.colors.subtext,
+      fontFamily: "RalewayBold",
+      fontSize: 20,
+      marginTop: 20,
+      marginBottom: 10,
+    },
 
-  heading: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 33,
-    width: 225,
-  },
+    heading: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 33,
+      width: 225,
+    },
 
-  sectionHeading: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    fontSize: 18,
-    marginVertical: 10,
-  },
+    sectionHeading: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      fontSize: 18,
+      marginVertical: 10,
+    },
 
-  homeResultsHeading: {
-    fontFamily: "RalewayBold",
-    fontSize: 13,
-    color: "white",
-    marginTop: 7,
-    paddingHorizontal: 7,
-  },
+    homeResultsHeading: {
+      fontFamily: "RalewayBold",
+      fontSize: 13,
+      color: theme.colors.text,
+      marginTop: 7,
+      paddingHorizontal: 7,
+    },
 
-  cityNameView: {
-    flexDirection: "row",
-    paddingHorizontal: 7,
-    paddingBottom: 7,
-  },
+    cityNameView: {
+      flexDirection: "row",
+      paddingHorizontal: 7,
+      paddingBottom: 7,
+    },
 
-  backdropBorder: {
-    borderRadius: 10,
-  },
+    backdropBorder: {
+      borderRadius: 10,
+    },
 
-  imgPreview: {
-    height: 85,
-    width: 115,
-  },
+    imgPreview: {
+      height: 85,
+      width: 115,
+    },
 
-  cityImgBorder: {
-    borderColor: "white",
-    borderWidth: 1,
-  },
+    cityImgBorder: {
+      borderColor: theme.colors.text,
+      borderWidth: 1,
+    },
 
-  attImgPreview: {
-    marginBottom: 15,
-    marginRight: 30,
-    justifyContent: "flex-end",
-    height: 130,
-  },
+    attImgPreview: {
+      marginBottom: 15,
+      marginRight: 30,
+      justifyContent: "flex-end",
+      height: 130,
+    },
 
-  ListItemContainer: {
-    backgroundColor: "#252B34",
-  },
+    ListItemContainer: {
+      backgroundColor: theme.colors.secondaryBackground,
+    },
 
-  ListItemText: {
-    color: "white",
-    fontFamily: "RalewayBold",
-    fontSize: 20,
-    paddingBottom: 5,
-  },
+    ListItemText: {
+      color: theme.colors.text,
+      fontFamily: "RalewayBold",
+      fontSize: 20,
+      paddingBottom: 5,
+    },
 
-  attractionTextView: {
-    backgroundColor: "rgba(52, 52, 52, 0.6)",
-    paddingHorizontal: 5,
-    paddingBottom: 3,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
-  },
+    attractionTextView: {
+      backgroundColor: "rgba(52, 52, 52, 0.6)",
+      paddingHorizontal: 5,
+      paddingBottom: 3,
+      borderBottomLeftRadius: 5,
+      borderBottomRightRadius: 5,
+    },
 
-  attractionText: {
-    fontFamily: "RalewayBold",
-    fontSize: 13,
-    color: "white",
-  },
+    attractionText: {
+      fontFamily: "RalewayBold",
+      fontSize: 13,
+      color: theme.colors.text,
+    },
 
-  noData: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    lineHeight: 25,
-  },
+    noData: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      lineHeight: 25,
+    },
 
-  noResults: {
-    fontFamily: "RalewayBold",
-    color: "white",
-    marginBottom: 5,
-    paddingLeft: 5,
-  },
+    noResults: {
+      fontFamily: "RalewayBold",
+      color: theme.colors.text,
+      marginBottom: 5,
+      paddingLeft: 5,
+    },
 
-  overlay: {
-    position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-});
+    overlay: {
+      position: "absolute",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1,
+    },
+  });
+};
