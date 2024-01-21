@@ -32,6 +32,7 @@ export default function ScreenHeader({ ScreenType }) {
       favorited.current = true;
       setfavorite(favorited.current);
     } else {
+      alert("An Error has occured, please try again.");
       console.error(error);
       console.error(funcCallName);
     }

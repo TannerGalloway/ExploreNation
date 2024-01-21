@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button, useTheme } from "@rneui/themed";
@@ -52,7 +52,7 @@ export default function Register({ navigation }) {
       validateOnChange={false}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
-        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-92}>
+        <View style={styles.container}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
@@ -109,7 +109,7 @@ export default function Register({ navigation }) {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       )}
     </Formik>
   );

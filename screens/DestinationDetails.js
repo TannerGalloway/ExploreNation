@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { View, ScrollView, Text, Image, StyleSheet, useWindowDimensions, FlatList } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Carousel from "react-native-reanimated-carousel";
@@ -11,6 +11,7 @@ import AttractionCardDetailed from "../components/AttractionCardDetailed";
 export default function DestinationDetails({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const apiResController = useRef(null);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
@@ -23,6 +24,7 @@ export default function DestinationDetails({ navigation }) {
   let destinationImgData = [];
   let popAttractionData = [];
   let destinationInfo = {};
+  const errorImg = require("../assets/images/error_loading.jpg");
   const destinationDataErrorObj = {
     photos: require("../assets/images/error_loading.jpg"),
   };
@@ -45,11 +47,15 @@ export default function DestinationDetails({ navigation }) {
     destinationInfo.countryFullName = "Unknown";
   }
 
+  // Initialize the abort controller.  Controller needs to be reinitialize after each abort operation performed.
+  apiResController.current = new AbortController();
+
   const getDestinationInfo = async () => {
     try {
       // Get destination details
       const destinationDetailsRes = await fetch(
-        `https://serpapi.com/search.json?engine=google_maps&place_id=${screenData.destination_place_id}&api_key=${SERPAPI_KEY}`
+        `https://serpapi.com/search.json?engine=google_maps&place_id=${screenData.destination_place_id}&api_key=${SERPAPI_KEY}`,
+        { signal: apiResController.current.signal }
       );
 
       if (!destinationDetailsRes.ok) {
@@ -59,7 +65,8 @@ export default function DestinationDetails({ navigation }) {
 
         // Get destination photos
         const destinationPhotosRes = await fetch(
-          `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${destinationDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
+          `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${destinationDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`,
+          { signal: apiResController.current.signal }
         );
 
         if (!destinationPhotosRes.ok) {
@@ -87,9 +94,13 @@ export default function DestinationDetails({ navigation }) {
 
       // Get population of the selected city.
       if (!screenData.destination_isCountry) {
-        const cityPopRes = await fetch(`https://api.api-ninjas.com/v1/city?name=${destinationInfo.city}`, {
-          headers: { "X-Api-Key": `${API_NINJAS_KEY}` },
-        });
+        const cityPopRes = await fetch(
+          `https://api.api-ninjas.com/v1/city?name=${destinationInfo.city}`,
+          {
+            headers: { "X-Api-Key": `${API_NINJAS_KEY}` },
+          },
+          { signal: apiResController.current.signal }
+        );
 
         if (!cityPopRes.ok) {
           destinationInfo.population = "Unknown";
@@ -104,7 +115,9 @@ export default function DestinationDetails({ navigation }) {
       }
 
       // Get the language spoken, currency, capital and flag of the country or selected city.
-      const countryDetailsRes = await fetch(`https://restcountries.com/v3.1/name/${destinationInfo.country}`);
+      const countryDetailsRes = await fetch(`https://restcountries.com/v3.1/name/${destinationInfo.country}`, {
+        signal: apiResController.current.signal,
+      });
       const countryDetails = await countryDetailsRes.json();
       if (!countryDetailsRes.ok) {
         destinationInfo.language = "Unknown";
@@ -129,7 +142,8 @@ export default function DestinationDetails({ navigation }) {
       if (!screenData.destination_isCountry) {
         // Get weather info about the selected city.
         const weatherDataRes = await fetch(
-          `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${screenData.destination_lat}, ${screenData.destination_lng}`
+          `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${screenData.destination_lat}, ${screenData.destination_lng}`,
+          { signal: apiResController.current.signal }
         );
 
         if (!weatherDataRes.ok) {
@@ -152,6 +166,7 @@ export default function DestinationDetails({ navigation }) {
       destinationInfo.population = "Unknown";
       destinationInfo.flag = require("../assets/images/error_loading.jpg");
       destinationInfo.weatherIcon = require("../assets/images/weather_error.png");
+      alert("An Error has occured, please try again.");
       console.error(error);
     }
     setDestinationData(destinationInfo);
@@ -159,51 +174,42 @@ export default function DestinationDetails({ navigation }) {
   };
 
   const getDestinationAttractionInfo = async () => {
-    let attractionRating = undefined;
-
     try {
       // Get popular attractions found in the selected destination.
       const popAttactionRes = await fetch(
-        `https://serpapi.com/search.json?engine=google&q=Top+sights+in+${
-          screenData.destination_isCountry ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
-        }+${destinationInfo.country.replace(/\s/g, "+")}&api_key=${SERPAPI_KEY}`
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${screenData.destination_lat},${screenData.destination_lng}&radius=80468&type=tourist_attraction&key=${GOOGLE_PLACES_API_KEY}`
       );
       const popAttaction = await popAttactionRes.json();
 
-      if (popAttaction.top_sights != undefined) {
-        for (let i = 0; i < popAttaction.top_sights.sights.length; i++) {
-          // Get Place ID of each attraction.
-          const attractionLocIDRes = await fetch(
-            `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=
-            ${popAttaction.top_sights.sights[i].title.replace(/\s/g, "+")}+${
-              screenData.destination_isCountry ? destinationInfo.country.replace(/\s/g, "+") : destinationInfo.city.replace(/\s/g, "+")
-            }&inputtype=textquery&fields=place_id,geometry&key=${GOOGLE_PLACES_API_KEY}`
-          );
-          const attractionLocIDs = await attractionLocIDRes.json();
-
-          if (attractionLocIDs.status == "OK") {
-            // Get the star rating and number of reviews the attraction currently has.
-            const attractionRatingRes = await fetch(
-              `https://maps.googleapis.com/maps/api/place/details/json?fields=rating%2Cuser_ratings_total&place_id=${attractionLocIDs.candidates[0].place_id}&key=${GOOGLE_PLACES_API_KEY}`
+      if (popAttaction.status == "OK") {
+        for (let i = 0; i < popAttaction.results.length; i++) {
+          // Get thumbnail of each attraction.
+          if (popAttaction.results[i].photos != undefined) {
+            const attImageResponse = await fetch(
+              `https://maps.googleapis.com/maps/api/place/photo?photoreference=${popAttaction.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
+              { signal: apiResController.current.signal }
             );
-            attractionRating = await attractionRatingRes.json();
+            attThumbnail = { uri: attImageResponse.url };
+          } else {
+            attThumbnail = errorImg;
           }
 
-          if (attractionLocIDs.candidates.length != 0) {
+          if (popAttaction.results.length != 0) {
             popAttractionData.push({
-              name: popAttaction.top_sights.sights[i].title,
-              rating: Object.keys(attractionRating.result).length != 0 ? attractionRating.result.rating : 0,
-              total_reviews: Object.keys(attractionRating.result).length != 0 ? attractionRating.result.user_ratings_total : 0,
-              thumbnail: { uri: popAttaction.top_sights.sights[i].thumbnail },
+              name: popAttaction.results[i].name,
+              rating: "rating" in popAttaction.results[i] ? popAttaction.results[i].rating : 0,
+              total_reviews: "user_ratings_total" in popAttaction.results[i] ? popAttaction.results[i].user_ratings_total : 0,
+              thumbnail: attThumbnail,
               location: screenData.destination_name,
-              latlng: attractionLocIDs.candidates[0].geometry.location,
-              place_id: attractionLocIDs.candidates[0].place_id != "NOT_FOUND" ? attractionLocIDs.candidates[0].place_id : "NOT_FOUND",
+              latlng: popAttaction.results[i].geometry.location,
+              place_id: "place_id" in popAttaction.results[i] ? popAttaction.results[i].place_id : "NOT_FOUND",
             });
           }
         }
       }
     } catch (error) {
       popAttractionData = attDataErrorObj;
+      alert("An Error has occured, please try again.");
       console.error(error);
     }
 

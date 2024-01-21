@@ -31,6 +31,7 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
       favorited.current = true;
       setFavorite(favorited.current);
     } else {
+      alert("An Error has occured, please try again.");
       console.error(error);
       console.error(funcCallName);
     }

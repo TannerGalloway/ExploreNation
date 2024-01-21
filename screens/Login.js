@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button, useTheme } from "@rneui/themed";
@@ -13,6 +13,7 @@ const validationSchema = Yup.object({
   password: Yup.string()
     .required("")
     .min(8, "Password must be 8 characters long")
+    .max(16, "Must be at less than 16 characters long")
     .matches(/[0-9]/, "Password requires a number")
     .matches(/[a-z]/, "Password requires a lowercase letter")
     .matches(/[A-Z]/, "Password requires an uppercase letter")
@@ -45,11 +46,11 @@ export default function Login({ navigation }) {
       initialValues={{ email: "", password: "" }}
       validateOnMount={true}
       validationSchema={validationSchema}
-      validateOnChange={false}
+      validateOnChange={true}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         // Moves screen up so screen keyboard does not overlap other componenents.
-        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-150}>
+        <View style={styles.container}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
@@ -104,7 +105,7 @@ export default function Login({ navigation }) {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       )}
     </Formik>
   );

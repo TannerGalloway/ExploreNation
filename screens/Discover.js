@@ -142,6 +142,7 @@ export default function Discover({ navigation }) {
       setAttractions(attractionList);
       setLoading(false);
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
       if (error.name == "AbortError") {
         apiCallInProgress.current = false;

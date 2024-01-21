@@ -112,6 +112,7 @@ export default function Map({ route, navigation }) {
           }
         }
       } catch (error) {
+        alert("An Error has occured, please try again.");
         console.error(error);
         if (error.name == "AbortError") {
           apiCallInProgress.current = false;

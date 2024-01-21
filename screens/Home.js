@@ -24,7 +24,7 @@ export default function Home({ navigation }) {
   const [attractionData, setAttractionData] = useState([]);
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
-  const { setScreenData, setCurrentLocation, setUsername, setProfilePic } = useContext(AppContext);
+  const { setScreenData, setCurrentLocation, username, setUsername, setProfilePic } = useContext(AppContext);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const styles = getStyles(theme);
@@ -39,18 +39,33 @@ export default function Home({ navigation }) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    let defaultUserName = user.email.slice(0, user.email.indexOf("@"));
+
     const { data, error } = await supabase.from("profiles").select("username, profilePic_uri").match({ id: user.id });
 
     if (error) {
-      setProfilePic(`https://ui-avatars.com/api/?name=${user.email.slice(0, user.email.indexOf("@"))}`);
+      setProfilePic(`https://ui-avatars.com/api/?name=${defaultUserName}`);
     }
 
     setUsername(data[0].username);
+    setProfilePic(data[0].profilePic_uri);
+  };
 
-    setProfilePic(
-      data[0].profilePic_uri == null
-        ? `https://ui-avatars.com/api/?name=${user.email.slice(0, user.email.indexOf("@"))}&background=0D8ABC&color=fff`
-        : data[0].profilePic_uri
+  const greeting = () => {
+    let currentDate = new Date();
+    let hours = currentDate.getHours();
+    let greeting = "";
+    if (hours < 12) {
+      greeting = username == null ? "Morning" : "Morning,";
+    } else if (hours >= 12 && hours <= 17) {
+      greeting = username == null ? "Afternoon" : "Afternoon,";
+    } else if (hours >= 17 && hours <= 24) {
+      greeting = username == null ? "Evening" : "Evening,";
+    }
+    return (
+      <Text style={styles.greeting}>
+        Good {greeting} {username}
+      </Text>
     );
   };
 
@@ -147,6 +162,7 @@ export default function Home({ navigation }) {
         }
       }
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
     }
 
@@ -246,6 +262,7 @@ export default function Home({ navigation }) {
         }
       }
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
     }
 
@@ -346,7 +363,7 @@ export default function Home({ navigation }) {
       <View style={styles.topElements}>
         {/* Top Left View */}
         <View>
-          <Text style={styles.greeting}>Good Evening</Text>
+          {greeting()}
           <Text style={styles.heading}>Where do you want to go?</Text>
         </View>
 
@@ -497,6 +514,7 @@ const getStyles = (theme) => {
       fontSize: 20,
       marginTop: 20,
       marginBottom: 10,
+      maxWidth: 200,
     },
 
     heading: {

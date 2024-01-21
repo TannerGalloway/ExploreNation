@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, Image, StyleSheet, BackHandler, TouchableOpacity, KeyboardAvoidingView } from "react-native";
+import { View, Text, Image, StyleSheet, BackHandler, TouchableOpacity } from "react-native";
 import { Button } from "@rneui/themed";
 import { Formik } from "formik";
 import * as Yup from "yup";
@@ -46,7 +46,7 @@ export default function ResetPassword() {
       validateOnChange={false}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
-        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-157}>
+        <View style={styles.container}>
           <Image style={styles.icon} source={email_icon} />
 
           {/* Heading */}
@@ -90,7 +90,7 @@ export default function ResetPassword() {
               onPress={handleSubmit}
             />
           </View>
-        </KeyboardAvoidingView>
+        </View>
       )}
     </Formik>
   );

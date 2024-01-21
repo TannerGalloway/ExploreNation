@@ -29,6 +29,7 @@ export default function Favorites({ navigation }) {
       } = await supabase.auth.getUser();
       return user.id;
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
     }
   };
@@ -81,6 +82,7 @@ export default function Favorites({ navigation }) {
       selectedFilter.current == "Destinations" ? setfavorites(destinationList) : setfavorites([]);
       setLoading(false);
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
       if (error.name == "AbortError") {
         apiCallInProgress.current = false;
@@ -144,6 +146,7 @@ export default function Favorites({ navigation }) {
       selectedFilter.current == "Attractions" ? setfavorites(attractionList) : setfavorites([]);
       setLoading(false);
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
       if (error.name == "AbortError") {
         apiCallInProgress.current = false;

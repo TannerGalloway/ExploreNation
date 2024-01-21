@@ -13,8 +13,9 @@ import { AppContext } from "../../utils/AppContext";
 // Form Validation Schema
 const validationSchema = Yup.object({
   username: Yup.string()
-    .min(3, "must be at least 3 characters long")
-    .max(16, "must be at less than 16 characters long")
+    .min(3, "Must be at least 3 characters long")
+    .max(16, "Must be at less than 16 characters long")
+    .matches(/^[a-zA-Z0-9_]*$/, "Special Characters are not allowed in username")
     .test("empty", " ", (value) => {
       if (value == undefined || value.length < 3 || value.length > 16) {
         return false;
@@ -88,7 +89,7 @@ export default function AccountSettings({ navigation }) {
       initialValues={{ username: username == null ? "" : username }}
       validateOnMount={true}
       validationSchema={validationSchema}
-      validateOnChange={false}
+      validateOnChange={true}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         <View style={styles.container}>

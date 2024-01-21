@@ -79,6 +79,7 @@ export default function AttractionDetails({ navigation }) {
         };
       }
     } catch (error) {
+      alert("An Error has occured, please try again.");
       console.error(error);
     }
     setAttractionData(attractionInfo);
@@ -229,6 +230,7 @@ const getStyles = (theme) => {
       color: theme.colors.subtext,
       fontFamily: "RalewayBold",
       fontSize: 15,
+      maxWidth: 200,
     },
 
     subText: {

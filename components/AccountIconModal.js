@@ -53,9 +53,7 @@ export default AccountIconModal = forwardRef((props, ref) => {
         rounded
         renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color={theme.colors.icon} />}
         onPress={toggleModal}
-        source={{
-          uri: profilePic,
-        }}
+        source={profilePic == null ? profilePic : { uri: profilePic }}
       />
       <BottomSheetModal ref={bottomSheetRef} snapPoints={snapPoints} backgroundStyle={styles.listItemContainer}>
         <View>
