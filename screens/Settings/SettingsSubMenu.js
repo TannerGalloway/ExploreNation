@@ -1,5 +1,5 @@
 import { useState, useRef, useContext, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { View, Text, StyleSheet, TouchableWithoutFeedback, StatusBar } from "react-native";
 import { Dialog, CheckBox, useTheme, useThemeMode } from "@rneui/themed";
 import { AppContext } from "../../utils/AppContext";
 
@@ -10,8 +10,18 @@ export default function SettingsSubMenu({ navigation, route }) {
   const [tempDisplayModalVisable, setTempDisplayModalVisable] = useState(false);
   const modalSelection = useRef("App Theme");
   const modalOptions = useRef(["Light", "Dark"]);
-  const { appTheme, setAppTheme, tempDisplay, setTempDisplay, prevAppTheme, setPrevAppTheme, prevTempDisplay, setPrevTempDisplay } =
-    useContext(AppContext);
+  const {
+    appTheme,
+    setAppTheme,
+    tempDisplay,
+    setTempDisplay,
+    prevAppTheme,
+    setPrevAppTheme,
+    prevTempDisplay,
+    setPrevTempDisplay,
+    statusBarStyle,
+    setStatusBarStyle,
+  } = useContext(AppContext);
   const styles = getStyles(theme);
 
   const togglePrefModal = (selection) => {
@@ -37,6 +47,7 @@ export default function SettingsSubMenu({ navigation, route }) {
           },
           headerTintColor: prevAppTheme == 1 ? "black" : "white",
         });
+        setStatusBarStyle(prevAppTheme == 1 ? "dark-content" : "light-content");
       }
     } else {
       if (tempDisplay != 1 || prevTempDisplay != tempDisplay) {
@@ -73,6 +84,7 @@ export default function SettingsSubMenu({ navigation, route }) {
                 },
                 headerTintColor: index + 1 == 1 ? "black" : "white",
               });
+              setStatusBarStyle(index + 1 == 1 ? "dark-content" : "light-content");
             } else {
               setTempDisplay(index + 1);
             }
@@ -160,6 +172,7 @@ export default function SettingsSubMenu({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor="transparent" translucent={true} />
       <RouteRender />
       <PreferencesModal title={modalSelection.current} options={modalOptions.current} />
     </View>

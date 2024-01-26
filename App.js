@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { useColorScheme, StatusBar } from "react-native";
 import { useFonts } from "expo-font";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -25,6 +25,7 @@ import SettingsMain from "./screens/Settings/SettingsMain";
 import SettingsSubMenu from "./screens/Settings/SettingsSubMenu";
 import PasswordSettings from "./screens/Settings/SettingsSecurity";
 import AccountSettings from "./screens/Settings/SettingsAccount";
+import AnimatedSplash from "./screens/AnimatedSplash";
 
 const theme = createTheme({
   lightColors: {
@@ -84,15 +85,17 @@ export default function App() {
   return (
     <AppContextProvider>
       <ThemeProvider theme={theme}>
+        <StatusBar barStyle={theme.mode == "dark" ? "light-content" : "dark-content"} backgroundColor="transparent" translucent={true} />
         <NavigationContainer>
           <BottomSheetModalProvider>
             <Stack.Navigator
-              initialRouteName="Welcome"
+              initialRouteName="AnimatedSplash"
               screenOptions={{
                 headerShown: false,
               }}>
               {session == null ? (
                 <>
+                  <Stack.Screen name="AnimatedSplash" component={AnimatedSplash} options={{ headerShown: false }} />
                   <Stack.Screen
                     name="Welcome"
                     component={Welcome}

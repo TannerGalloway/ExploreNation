@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useContext } from "react";
-import { View, Text, Image, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, FlatList, TouchableOpacity, StatusBar } from "react-native";
 import { supabase } from "../utils/supabaseClient";
 import { Button, useTheme } from "@rneui/themed";
 import { FontAwesome, Feather } from "@expo/vector-icons";
@@ -24,7 +24,7 @@ export default function Home({ navigation }) {
   const [attractionData, setAttractionData] = useState([]);
   const [cityLoading, setCityLoading] = useState(true);
   const [attLoading, setAttLoading] = useState(true);
-  const { setScreenData, setCurrentLocation, username, setUsername, setProfilePic } = useContext(AppContext);
+  const { setScreenData, setCurrentLocation, username, setUsername, setProfilePic, statusBarStyle } = useContext(AppContext);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const styles = getStyles(theme);
@@ -352,6 +352,7 @@ export default function Home({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor="transparent" translucent={true} />
       {modalVisable ? (
         <TouchableOpacity
           style={styles.overlay}

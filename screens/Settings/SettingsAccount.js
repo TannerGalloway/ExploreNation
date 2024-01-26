@@ -98,8 +98,8 @@ export default function AccountSettings({ navigation }) {
             <Avatar
               size={85}
               rounded
-              renderPlaceholderContent={<FontAwesome name="user-circle" size={44} color={theme.colors.icon} />}
-              source={{ uri: profilePic }}
+              renderPlaceholderContent={<FontAwesome name="user-circle" size={75} color={theme.colors.icon} />}
+              source={profilePic == null ? profilePic : { uri: profilePic }}
               onPress={pickImage}>
               <Avatar.Accessory size={23} />
             </Avatar>

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, KeyboardAvoidingView } from "react-native";
+import { useState, useContext } from "react";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, StatusBar } from "react-native";
 import { Button, useTheme } from "@rneui/themed";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import TextInput from "../components/TextInput";
+import { AppContext } from "../utils/AppContext";
 
 // Form Validation Schema
 const validationSchema = Yup.object({
@@ -15,6 +16,7 @@ export default function ForgotPassword({ navigation }) {
   const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
   const styles = getStyles(theme);
+  const { statusBarStyle } = useContext(AppContext);
 
   const handleSubmit = (values) => {
     alert(`Submitting: ${JSON.stringify(values)}`);
@@ -22,46 +24,54 @@ export default function ForgotPassword({ navigation }) {
   };
 
   return (
-    <Formik initialValues={{ email: "" }} validateOnMount={true} validationSchema={validationSchema} validateOnChange={false} onSubmit={handleSubmit}>
-      {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
-        <KeyboardAvoidingView style={styles.container} behavior="position" keyboardVerticalOffset={-280}>
-          <Image style={styles.icon} source={email_icon} />
+    <>
+      <StatusBar barStyle={statusBarStyle} backgroundColor="transparent" translucent={true} />
+      <Formik
+        initialValues={{ email: "" }}
+        validateOnMount={true}
+        validationSchema={validationSchema}
+        validateOnChange={true}
+        onSubmit={handleSubmit}>
+        {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
+          <View style={styles.container}>
+            <Image style={styles.icon} source={email_icon} />
 
-          {/* Heading */}
-          <View>
-            <Text style={styles.heading}>Forgot your Password?</Text>
-            <Text style={styles.subheading}>Enter the Email associated with your account and we'll get you back to Exploring.</Text>
-          </View>
+            {/* Heading */}
+            <View>
+              <Text style={styles.heading}>Forgot your Password?</Text>
+              <Text style={styles.subheading}>Enter the Email associated with your account and we'll get you back to Exploring.</Text>
+            </View>
 
-          <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
+            <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
 
-          {/* Send Button */}
-          <View>
-            <Button
-              title="Send"
-              titleStyle={styles.buttonText}
-              buttonStyle={styles.button}
-              disabledStyle={{ backgroundColor: "#476D8E" }}
-              disabled={!isValid || isSubmitting}
-              TouchableComponent={TouchableOpacity}
-              loading={loading}
-              onPress={handleSubmit}
-            />
+            {/* Send Button */}
+            <View>
+              <Button
+                title="Send"
+                titleStyle={styles.buttonText}
+                buttonStyle={styles.button}
+                disabledStyle={{ backgroundColor: "#476D8E" }}
+                disabled={!isValid || isSubmitting}
+                TouchableComponent={TouchableOpacity}
+                loading={loading}
+                onPress={handleSubmit}
+              />
 
-            {/* Sign In & Sign Up Screen Link */}
-            <View style={styles.footer}>
-              <Text style={styles.accountMessage}>Remembered your Password?</Text>
-              <Pressable
-                onPress={() => {
-                  navigation.replace("Login");
-                }}>
-                <Text style={[styles.accountMessage, { color: theme.colors.active }]}>Login</Text>
-              </Pressable>
+              {/* Sign In & Sign Up Screen Link */}
+              <View style={styles.footer}>
+                <Text style={styles.accountMessage}>Remembered your Password?</Text>
+                <Pressable
+                  onPress={() => {
+                    navigation.replace("Login");
+                  }}>
+                  <Text style={[styles.accountMessage, { color: theme.colors.active }]}>Login</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </KeyboardAvoidingView>
-      )}
-    </Formik>
+        )}
+      </Formik>
+    </>
   );
 }
 

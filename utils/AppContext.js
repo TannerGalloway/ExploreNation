@@ -13,6 +13,7 @@ export default function AppContextProvider({ children }) {
   const [prevTempDisplay, setPrevTempDisplay] = useState(1);
   const [username, setUsername] = useState("");
   const [profilePic, setProfilePic] = useState(null);
+  const [statusBarStyle, setStatusBarStyle] = useState("default");
   const contextValues = {
     screenData,
     setScreenData,
@@ -30,6 +31,8 @@ export default function AppContextProvider({ children }) {
     setUsername,
     profilePic,
     setProfilePic,
+    statusBarStyle,
+    setStatusBarStyle,
   };
 
   return <AppContext.Provider value={contextValues}>{children}</AppContext.Provider>;

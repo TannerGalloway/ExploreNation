@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import { TouchableWithoutFeedback } from "react-native";
+import { TouchableWithoutFeedback, Share } from "react-native";
 import { FontAwesome, Entypo } from "@expo/vector-icons";
 import { useTheme } from "@rneui/themed";
 import { supabase } from "../utils/supabaseClient";
@@ -208,6 +208,18 @@ export default function ScreenHeader({ ScreenType }) {
     }
   };
 
+  const shareInfo = async () => {
+    try {
+      await Share.share({
+        message: `Check out the ${screenData.att_name} located in ${
+          screenData.att_location
+        }. \nhttps://www.google.com/maps/search/?api=1&query=${screenData.att_name.replace(/ /g, "%20")}`,
+      });
+    } catch (error) {
+      alert("An Error has occured, please try again.");
+    }
+  };
+
   useEffect(() => {
     ScreenType == "AttractionDetails" ? getAttractionFavStatus("favorite") : getDestinationFavStatus("favorite");
   }, []);
@@ -227,10 +239,7 @@ export default function ScreenHeader({ ScreenType }) {
         <FontAwesome name={favorite ? "heart" : "heart-o"} size={24} color={favorite ? "#ea4c8a" : theme.colors.icon} />
       </TouchableWithoutFeedback>
       {ScreenType == "AttractionDetails" ? (
-        <TouchableWithoutFeedback
-          onPress={() => {
-            console.log("Shared");
-          }}>
+        <TouchableWithoutFeedback onPress={shareInfo}>
           <Entypo name="share" style={{ marginLeft: 35, marginRight: 10 }} size={24} color={theme.colors.icon} />
         </TouchableWithoutFeedback>
       ) : (

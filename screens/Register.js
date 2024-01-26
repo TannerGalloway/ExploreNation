@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity } from "react-native";
+import { useState, useContext } from "react";
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, StatusBar } from "react-native";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { Button, useTheme } from "@rneui/themed";
 import { supabase } from "../utils/supabaseClient";
 import TextInput from "../components/TextInput";
 import PasswordInput from "../components/PasswordInput";
+import { AppContext } from "../utils/AppContext";
 
 // Form Validation Schema
 const validationSchema = Yup.object({
@@ -26,9 +27,10 @@ const validationSchema = Yup.object({
 
 export default function Register({ navigation }) {
   const { theme } = useTheme();
-  const email_icon = require("../assets/images/email_icon.png");
+  const globe_icon = require("../assets/images/icon.png");
   const [loading, setloading] = useState(false);
   const styles = getStyles(theme);
+  const { statusBarStyle } = useContext(AppContext);
 
   // Submit form to server.
   const handleSubmit = async (values) => {
@@ -45,73 +47,76 @@ export default function Register({ navigation }) {
   };
 
   return (
-    <Formik
-      initialValues={{ email: "", password: "", passwordConfirm: "" }}
-      validateOnMount={true}
-      validationSchema={validationSchema}
-      validateOnChange={false}
-      onSubmit={handleSubmit}>
-      {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
-        <View style={styles.container}>
-          <Image style={styles.icon} source={email_icon} />
+    <>
+      <StatusBar barStyle={statusBarStyle} backgroundColor="transparent" translucent={true} />
+      <Formik
+        initialValues={{ email: "", password: "", passwordConfirm: "" }}
+        validateOnMount={true}
+        validationSchema={validationSchema}
+        validateOnChange={false}
+        onSubmit={handleSubmit}>
+        {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
+          <View style={styles.container}>
+            <Image style={styles.icon} source={globe_icon} />
 
-          {/* Heading */}
-          <View>
-            <Text style={styles.heading}>Begin your Journey</Text>
-            <Text style={styles.subheading}>You're 1 step closer to Adventure.</Text>
-          </View>
+            {/* Heading */}
+            <View>
+              <Text style={styles.heading}>Begin your Journey</Text>
+              <Text style={styles.subheading}>You're 1 step closer to Adventure.</Text>
+            </View>
 
-          <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
+            <TextInput value={values.email} onChangeText={handleChange("email")} onBlur={handleBlur("email")} error={errors.email} type={"email"} />
 
-          {/* Password */}
-          <PasswordInput
-            placeholder="Password"
-            type="Password"
-            value={values.password}
-            onChangeText={handleChange("password")}
-            onBlur={handleBlur("password")}
-            error={errors.password}
-            isValid={isValid}
-          />
-
-          {/* Confirm Password */}
-          <PasswordInput
-            placeholder="Confirm Password"
-            type="Confirm Password"
-            value={values.passwordConfirm}
-            onChangeText={handleChange("passwordConfirm")}
-            onBlur={handleBlur("passwordConfirm")}
-            error={errors.passwordConfirm}
-            isValid={isValid}
-          />
-
-          {/* Sign In & Sign Up Button */}
-          <View>
-            <Button
-              title="Register"
-              titleStyle={styles.buttonText}
-              buttonStyle={styles.button}
-              disabledStyle={{ backgroundColor: "#476D8E" }}
-              disabled={!isValid || isSubmitting}
-              TouchableComponent={TouchableOpacity}
-              loading={loading}
-              onPress={handleSubmit}
+            {/* Password */}
+            <PasswordInput
+              placeholder="Password"
+              type="Password"
+              value={values.password}
+              onChangeText={handleChange("password")}
+              onBlur={handleBlur("password")}
+              error={errors.password}
+              isValid={isValid}
             />
 
-            {/* Sign In & Sign Up Screen Link */}
-            <View style={styles.footer}>
-              <Text style={styles.accountMessage}>Already have an Account?</Text>
-              <Pressable
-                onPress={() => {
-                  navigation.replace("Login");
-                }}>
-                <Text style={[styles.accountMessage, { color: theme.colors.active }]}>Login</Text>
-              </Pressable>
+            {/* Confirm Password */}
+            <PasswordInput
+              placeholder="Confirm Password"
+              type="Confirm Password"
+              value={values.passwordConfirm}
+              onChangeText={handleChange("passwordConfirm")}
+              onBlur={handleBlur("passwordConfirm")}
+              error={errors.passwordConfirm}
+              isValid={isValid}
+            />
+
+            {/* Sign In & Sign Up Button */}
+            <View>
+              <Button
+                title="Register"
+                titleStyle={styles.buttonText}
+                buttonStyle={styles.button}
+                disabledStyle={{ backgroundColor: "#476D8E" }}
+                disabled={!isValid || isSubmitting}
+                TouchableComponent={TouchableOpacity}
+                loading={loading}
+                onPress={handleSubmit}
+              />
+
+              {/* Sign In & Sign Up Screen Link */}
+              <View style={styles.footer}>
+                <Text style={styles.accountMessage}>Already have an Account?</Text>
+                <Pressable
+                  onPress={() => {
+                    navigation.replace("Login");
+                  }}>
+                  <Text style={[styles.accountMessage, { color: theme.colors.active }]}>Login</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      )}
-    </Formik>
+        )}
+      </Formik>
+    </>
   );
 }
 

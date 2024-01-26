@@ -1,10 +1,12 @@
-import { useEffect } from "react";
-import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { useEffect, useContext } from "react";
+import { View, Text, StyleSheet, TouchableWithoutFeedback, StatusBar } from "react-native";
 import { useTheme, useThemeMode } from "@rneui/themed";
+import { AppContext } from "../../utils/AppContext";
 
 export default function Settings({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const { statusBarStyle } = useContext(AppContext);
   const styles = getStyles(theme);
 
   useEffect(() => {
@@ -18,6 +20,7 @@ export default function Settings({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor="transparent" translucent={true} />
       {/* Account Tab*/}
       <TouchableWithoutFeedback onPress={() => navigation.navigate("SettingsSubMenu", { selection: "Account" })}>
         <View>
