@@ -7,10 +7,10 @@ import { FontAwesome } from "@expo/vector-icons";
 
 export default function AttractionCardGeneric({ navigation, details, currentScreen }) {
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [favorite, setFavorite] = useState(false);
   const { setScreenData } = useContext(AppContext);
   let favorited = useRef(false);
-  const styles = getStyles(theme);
 
   const getLoggedinUser = async (funcCallName) => {
     try {
@@ -32,14 +32,12 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
       setFavorite(favorited.current);
     } else {
       alert("An Error has occured, please try again.");
-      console.error(error);
-      console.error(funcCallName);
     }
   };
 
   const getAttractionID = async (funcCallName) => {
     try {
-      // Get the id of the selected attraction.
+      // Get the id of the selected attraction from the database.
       const { data } = await supabase.from("attractions").select("id").eq("att_place_id", details.place_id);
       return data;
     } catch (error) {
@@ -49,7 +47,7 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
 
   const getDestinationID = async (funcCallName) => {
     try {
-      // Get the id of the selected destination.
+      // Get the id of the selected destination from the database.
       const { data } = await supabase.from("destinations").select("id").eq("destination_place_id", details.place_id);
       return data;
     } catch (error) {
@@ -64,14 +62,14 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
       let currentUser = await getLoggedinUser("user");
 
       if (attractionIDRes.length != 0) {
-        // Check to see if the current attraction id has been favorited by the current user.
+        // Check to see if the current attraction id has been favorited by the current logged in user.
         const { data } = await supabase
           .from("attraction_favs")
           .select("attraction_id")
           .eq("profile_id", currentUser)
           .eq("attraction_id", attractionIDRes[0].id);
 
-        // Set the heart icon to active/inactive if the attraction is found/not found in the attraction_favs table.
+        // Set the heart icon to active/inactive if the attraction is found/not found in the database.
         if (data.length > 0) {
           favorited.current = true;
           setFavorite(favorited.current);
@@ -85,7 +83,6 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
     }
   };
 
-  // Implement the differences between addFavorite for attractions and destinations.
   const addFavorite = async () => {
     try {
       if (currentScreen == "Attractions") {
@@ -93,9 +90,8 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
         let currentUser = await getLoggedinUser("add");
         let attractionID = attractionIDRes[0];
 
-        // Get the current attraction id and create the link between the id and the user who favorited the attraction.  If the attraction is not already in the database.
+        // Insert attraction data into the database if the attraction has not already been added.
         if (attractionIDRes.length == 0) {
-          // Insert attraction data
           const { data } = await supabase
             .from("attractions")
             .insert({
@@ -111,7 +107,7 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
           attractionID = data[0];
         }
 
-        // Insert data into the database. Link the current user with the favorited attraction id.
+        // Link the current user with the favorited attraction id.
         await supabase.from("attraction_favs").insert({
           attraction_id: attractionID.id,
           profile_id: currentUser,
@@ -122,9 +118,8 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
         let currentUser = await getLoggedinUser("add");
         let destinationID = destinationIDRes[0];
 
-        // Get the current destination id and create the link between the id and the user who favorited the destination.  If the destination is not already in the database.
+        // Insert destination data into the database if the destination has not already been added.
         if (destinationIDRes.length == 0) {
-          // Insert destination data into the database.
           const { data } = await supabase
             .from("destinations")
             .insert({
@@ -158,7 +153,7 @@ export default function AttractionCardGeneric({ navigation, details, currentScre
 
         // If the id appears in the database, allow the delete function to run.
         if (attractionIDRes.length > 0) {
-          // Delete the attraction with the returned id.
+          // Delete the attraction with the returned id for the currently logged in user.
           await supabase.from("attraction_favs").delete().eq("profile_id", currentUser).eq("attraction_id", attractionIDRes[0].id);
         }
       } else {

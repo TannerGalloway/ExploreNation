@@ -5,8 +5,8 @@ import { Input, useTheme } from "@rneui/themed";
 
 export default function PasswordInput({ placeholder, type, value, onChangeText, onBlur, error, isValid }) {
   const { theme } = useTheme();
-  const [hidePassword, setPwdVisable] = useState(true);
   const styles = getStyles(theme);
+  const [hidePassword, setPwdVisable] = useState(true);
 
   // Password Visibility Icon Change
   let iconName = null;

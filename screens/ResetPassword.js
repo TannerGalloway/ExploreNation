@@ -21,8 +21,8 @@ const validationSchema = Yup.object({
 });
 
 export default function ResetPassword() {
-  const email_icon = require("../assets/images/email_icon.png");
   const [loading, setloading] = useState(false);
+  const email_icon = require("../assets/images/email_icon.png");
 
   // Disable Back Button
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function ResetPassword() {
       initialValues={{ password: "", passwordConfirm: "" }}
       validateOnMount={true}
       validationSchema={validationSchema}
-      validateOnChange={false}
+      validateOnChange={true}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         <View style={styles.container}>

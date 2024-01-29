@@ -8,8 +8,8 @@ import { AppContext } from "../utils/AppContext";
 
 export default AccountIconModal = forwardRef((props, ref) => {
   const { theme } = useTheme();
-  const bottomSheetRef = useRef(null);
   const styles = getStyles(theme);
+  const bottomSheetRef = useRef(null);
   const { profilePic } = useContext(AppContext);
   const [modalVisable, setModalVisable] = useState(false);
   const snapPoints = ["21%"];
@@ -39,7 +39,7 @@ export default AccountIconModal = forwardRef((props, ref) => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      alert(error.message);
+      alert("An Error has occured, please try again.");
     }
   };
 

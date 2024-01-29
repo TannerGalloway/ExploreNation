@@ -6,15 +6,15 @@ import { AppContext } from "../../utils/AppContext";
 export default function Settings({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
-  const { statusBarStyle } = useContext(AppContext);
   const styles = getStyles(theme);
+  const { statusBarStyle } = useContext(AppContext);
 
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: mode == "light" ? "white" : "#101d23",
+        backgroundColor: mode == "dark" ? "#101d23" : "white",
       },
-      headerTintColor: mode == "light" ? "black" : "white",
+      headerTintColor: mode == "dark" ? "white" : "black",
     });
   }, [mode]);
 

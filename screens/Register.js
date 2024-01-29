@@ -27,12 +27,12 @@ const validationSchema = Yup.object({
 
 export default function Register({ navigation }) {
   const { theme } = useTheme();
-  const globe_icon = require("../assets/images/icon.png");
-  const [loading, setloading] = useState(false);
   const styles = getStyles(theme);
+  const [loading, setloading] = useState(false);
   const { statusBarStyle } = useContext(AppContext);
+  const globe_icon = require("../assets/images/icon.png");
 
-  // Submit form to server.
+  // Submit form to database.
   const handleSubmit = async (values) => {
     setloading(true);
     const { error } = await supabase.auth.signUp({
@@ -41,8 +41,8 @@ export default function Register({ navigation }) {
     });
 
     if (error) {
-      alert(error.message);
       setloading(false);
+      alert("An Error has occured, please try again.");
     }
   };
 

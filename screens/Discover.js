@@ -10,6 +10,7 @@ import GenericCardDesign from "../components/GenericCardDesign";
 export default function Discover({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const styles = getStyles(theme);
   const accountIconModalRef = useRef(null);
   const screenFirstVisit = useRef(true);
   const loadingOnScreenLeave = useRef(false);
@@ -19,7 +20,6 @@ export default function Discover({ navigation }) {
   const [modalVisable, setModalVisable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [attractions, setAttractions] = useState([]);
-  const styles = getStyles(theme);
   const errorImg = require("../assets/images/error_loading.jpg");
   let screenLoading = true;
   let dataError = true;
@@ -49,7 +49,7 @@ export default function Discover({ navigation }) {
       if (countryResponse.ok) {
         const countryData = await countryResponse.json();
 
-        // Randomly select 12 countries.
+        // Randomly select 12 countries from the api.
         for (let i = 0; i < 12; i++) {
           let randCountryDataIndex = genRandNum(countryData.data.length);
           let selectedCountry = `${countryData.data[randCountryDataIndex].country.trim()}`;
@@ -137,13 +137,14 @@ export default function Discover({ navigation }) {
           }
         }
       }
+
       screenLoading = false;
       apiCallInProgress.current = false;
       setAttractions(attractionList);
       setLoading(false);
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
+
       if (error.name == "AbortError") {
         apiCallInProgress.current = false;
         attractionList = [];
@@ -162,7 +163,7 @@ export default function Discover({ navigation }) {
     return Math.floor(Math.random() * limit);
   };
 
-  // Modify the string input and return the city and country from the inputed string.
+  // Modify the string input and return the city and country from the string parameter.
   const getCityCountry = (locationStr) => {
     const regex = /\d+|[+]|\+/;
     let modLocationStr = "";
@@ -239,9 +240,9 @@ export default function Discover({ navigation }) {
     useCallback(() => {
       navigation.setOptions({
         headerStyle: {
-          backgroundColor: mode == "light" ? "white" : "#101d23",
+          backgroundColor: mode == "dark" ? "#101d23" : "white",
         },
-        headerTintColor: mode == "light" ? "black" : "white",
+        headerTintColor: mode == "dark" ? "white" : "black",
       });
 
       // Inital call to run on first visit of the screen.
@@ -276,12 +277,12 @@ export default function Discover({ navigation }) {
         />
       ) : null}
       <View style={styles.headerRow}>
-        {/* Top Left View */}
+        {/* Top Left Header*/}
         <View>
           <Text style={styles.heading}>Discover</Text>
           <Text style={[styles.subText, { marginTop: 10 }]}>Filter</Text>
         </View>
-        {/* Top Right View */}
+        {/* Top Right Header */}
         <View style={{ marginTop: 20 }}>
           <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} navigation={navigation} />
         </View>

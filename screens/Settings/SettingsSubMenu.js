@@ -6,6 +6,7 @@ import { AppContext } from "../../utils/AppContext";
 export default function SettingsSubMenu({ navigation, route }) {
   const { theme } = useTheme();
   const { mode, setMode } = useThemeMode();
+  const styles = getStyles(theme);
   const [appThemeModalVisable, setAppThemeModalVisable] = useState(false);
   const [tempDisplayModalVisable, setTempDisplayModalVisable] = useState(false);
   const modalSelection = useRef("App Theme");
@@ -22,7 +23,6 @@ export default function SettingsSubMenu({ navigation, route }) {
     statusBarStyle,
     setStatusBarStyle,
   } = useContext(AppContext);
-  const styles = getStyles(theme);
 
   const togglePrefModal = (selection) => {
     if (selection == "App Theme") {
@@ -40,14 +40,14 @@ export default function SettingsSubMenu({ navigation, route }) {
     if (title == "App Theme") {
       if (appTheme != 1 || prevAppTheme != appTheme) {
         setAppTheme(prevAppTheme);
-        setMode(prevAppTheme == 1 ? "light" : "dark");
+        setMode(prevAppTheme == 2 ? "dark" : "light");
         navigation.setOptions({
           headerStyle: {
-            backgroundColor: prevAppTheme == 1 ? "white" : "#101d23",
+            backgroundColor: prevAppTheme == 2 ? "#101d23" : "white",
           },
-          headerTintColor: prevAppTheme == 1 ? "black" : "white",
+          headerTintColor: prevAppTheme == 2 ? "white" : "black",
         });
-        setStatusBarStyle(prevAppTheme == 1 ? "dark-content" : "light-content");
+        setStatusBarStyle(prevAppTheme == 2 ? "light-content" : "dark-content");
       }
     } else {
       if (tempDisplay != 1 || prevTempDisplay != tempDisplay) {
@@ -77,14 +77,14 @@ export default function SettingsSubMenu({ navigation, route }) {
           onPress={() => {
             if (title == "App Theme") {
               setAppTheme(index + 1);
-              setMode(index + 1 == 1 ? "light" : "dark");
+              setMode(index + 1 == 2 ? "dark" : "light");
               navigation.setOptions({
                 headerStyle: {
-                  backgroundColor: index + 1 == 1 ? "white" : "#101d23",
+                  backgroundColor: index + 1 == 2 ? "#101d23" : "white",
                 },
-                headerTintColor: index + 1 == 1 ? "black" : "white",
+                headerTintColor: index + 1 == 2 ? "white" : "black",
               });
-              setStatusBarStyle(index + 1 == 1 ? "dark-content" : "light-content");
+              setStatusBarStyle(index + 1 == 2 ? "light-content" : "dark-content");
             } else {
               setTempDisplay(index + 1);
             }
@@ -164,9 +164,9 @@ export default function SettingsSubMenu({ navigation, route }) {
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: mode == "light" ? "white" : "#101d23",
+        backgroundColor: mode == "dark" ? "#101d23" : "white",
       },
-      headerTintColor: mode == "light" ? "black" : "white",
+      headerTintColor: mode == "dark" ? "white" : "black",
     });
   }, []);
 

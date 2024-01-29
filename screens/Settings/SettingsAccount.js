@@ -33,7 +33,7 @@ export default function AccountSettings({ navigation }) {
   const { username, setUsername, profilePic, setProfilePic } = useContext(AppContext);
   let profilePicValid = useRef(false);
 
-  // Submit form to server.
+  // Submit form to database.
   const handleSubmit = async (values) => {
     let dbError = {};
     setloading(true);
@@ -51,9 +51,9 @@ export default function AccountSettings({ navigation }) {
     }
 
     if (dbError) {
-      alert(dbError.message);
-      setloading(false);
       profilePicValid.current = false;
+      setloading(false);
+      alert("An Error has occured, please try again.");
     }
 
     setUsername(values.username);
@@ -78,9 +78,9 @@ export default function AccountSettings({ navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: mode == "light" ? "white" : "#101d23",
+        backgroundColor: mode == "dark" ? "#101d23" : "white",
       },
-      headerTintColor: mode == "light" ? "black" : "white",
+      headerTintColor: mode == "dark" ? "white" : "black",
     });
   }, []);
 

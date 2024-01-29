@@ -9,9 +9,9 @@ import { useNavigation } from "@react-navigation/native";
 export default function ScreenHeader({ ScreenType }) {
   const { theme } = useTheme();
   const [favorite, setfavorite] = useState(false);
-  let favorited = useRef(false);
   const { screenData } = useContext(AppContext);
   const navigation = useNavigation();
+  let favorited = useRef(false);
 
   const getLoggedinUser = async (funcCallName) => {
     try {
@@ -33,8 +33,6 @@ export default function ScreenHeader({ ScreenType }) {
       setfavorite(favorited.current);
     } else {
       alert("An Error has occured, please try again.");
-      console.error(error);
-      console.error(funcCallName);
     }
   };
 
@@ -78,11 +76,11 @@ export default function ScreenHeader({ ScreenType }) {
   const addAttractionfavorite = async () => {
     try {
       let attractionIDRes = await getAttractionID("add");
-      let attractionID = attractionIDRes[0];
       let currentUser = await getLoggedinUser("add");
+      let attractionID = attractionIDRes[0];
 
+      // Insert attraction data into the database if the attraction has not already been added.
       if (attractionIDRes.length == 0) {
-        // Insert attraction data into database.
         const { data } = await supabase
           .from("attractions")
           .insert({
@@ -167,8 +165,8 @@ export default function ScreenHeader({ ScreenType }) {
       let currentUser = await getLoggedinUser("add");
       let destinationID = destinationIDRes[0];
 
+      // Insert destination data into the database if the destination has not already been added.
       if (destinationIDRes.length == 0) {
-        // Insert destination data into the database.
         const { data } = await supabase
           .from("destinations")
           .insert({

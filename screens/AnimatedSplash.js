@@ -4,6 +4,7 @@ import LottieView from "lottie-react-native";
 
 export default function AnimatedSplash({ navigation }) {
   const animation = useRef(null);
+
   useEffect(() => {
     animation.current?.play();
   }, []);

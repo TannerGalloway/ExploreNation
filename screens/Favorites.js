@@ -9,6 +9,7 @@ import GenericCardDesign from "../components/GenericCardDesign";
 export default function Favorites({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const styles = getStyles(theme);
   const accountIconModalRef = useRef(null);
   const screenFirstVisit = useRef(true);
   const loadingOnScreenLeave = useRef(false);
@@ -18,7 +19,6 @@ export default function Favorites({ navigation }) {
   const [modalVisable, setModalVisable] = useState(false);
   const [favorites, setfavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const styles = getStyles(theme);
   let screenLoading = true;
   let dataError = true;
 
@@ -30,7 +30,6 @@ export default function Favorites({ navigation }) {
       return user.id;
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
     }
   };
 
@@ -64,6 +63,7 @@ export default function Favorites({ navigation }) {
           .select()
           .eq("id", desDataResIDs.data[i].destination_id)
           .abortSignal(apiResController.current.signal);
+
         if (error == null) {
           destinationList.push({
             location: data[0].destination_name,
@@ -83,7 +83,7 @@ export default function Favorites({ navigation }) {
       setLoading(false);
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
+
       if (error.name == "AbortError") {
         apiCallInProgress.current = false;
         destinationList = [];
@@ -127,6 +127,7 @@ export default function Favorites({ navigation }) {
           .select()
           .eq("id", attDataResIDs.data[i].attraction_id)
           .abortSignal(apiResController.current.signal);
+
         if (error == null) {
           attractionList.push({
             name: data[0].att_name,
@@ -147,7 +148,7 @@ export default function Favorites({ navigation }) {
       setLoading(false);
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
+
       if (error.name == "AbortError") {
         apiCallInProgress.current = false;
         attractionList = [];
@@ -170,9 +171,9 @@ export default function Favorites({ navigation }) {
     useCallback(() => {
       navigation.setOptions({
         headerStyle: {
-          backgroundColor: mode == "light" ? "white" : "#101d23",
+          backgroundColor: mode == "dark" ? "#101d23" : "white",
         },
-        headerTintColor: mode == "light" ? "black" : "white",
+        headerTintColor: mode == "dark" ? "white" : "black",
       });
 
       // Inital call to run on first visit of the screen.
@@ -208,12 +209,12 @@ export default function Favorites({ navigation }) {
       ) : null}
 
       <View style={styles.headerRow}>
-        {/* Top Left View */}
+        {/* Top Left Header */}
         <View>
           <Text style={styles.heading}>Favorites</Text>
           <Text style={[styles.subText, { marginTop: 10 }]}>Filter</Text>
         </View>
-        {/* Top Right View */}
+        {/* Top Right Header */}
         <View style={{ marginTop: 20 }}>
           <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} navigation={navigation} />
         </View>

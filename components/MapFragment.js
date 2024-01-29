@@ -7,6 +7,7 @@ import mapStyleLight from "../utils/mapStyleLight.json";
 export default function MapFragment(props) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+
   return (
     <MapView
       provider={PROVIDER_GOOGLE}

@@ -12,13 +12,13 @@ import { AppContext } from "../utils/AppContext";
 export default function AttractionDetails({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const styles = getStyles(theme);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const [index, setIndex] = useState(0);
   const [attractionData, setAttractionData] = useState([]);
   const [attDataLoading, setAttDataLoading] = useState(true);
   const { screenData } = useContext(AppContext);
-  const styles = getStyles(theme);
   let attImageData = [];
   let attractionInfo = {};
   const dataErrorObj = {
@@ -30,7 +30,7 @@ export default function AttractionDetails({ navigation }) {
   const getAttractionInfo = async () => {
     let attractionDetails = {};
     try {
-      // Get additional attraction details
+      // Get additional attraction details that are not already present from other api calls.
       const attractionDetailsRes = await fetch(
         `https://serpapi.com/search.json?engine=google_maps&place_id=${screenData.att_place_id}&api_key=${SERPAPI_KEY}`
       );
@@ -55,7 +55,7 @@ export default function AttractionDetails({ navigation }) {
         }
       }
 
-      // Get additional attraction photos
+      // Get additional attraction photos.
       const attractionPhotosRes = await fetch(
         `https://serpapi.com/search.json?engine=google_maps_photos&data_id=${attractionDetails.place_results.data_id}&api_key=${SERPAPI_KEY}`
       );
@@ -80,7 +80,6 @@ export default function AttractionDetails({ navigation }) {
       }
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
     }
     setAttractionData(attractionInfo);
     setAttDataLoading(false);
@@ -89,9 +88,9 @@ export default function AttractionDetails({ navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: mode == "light" ? "white" : "#101d23",
+        backgroundColor: mode == "dark" ? "#101d23" : "white",
       },
-      headerTintColor: mode == "light" ? "black" : "white",
+      headerTintColor: mode == "dark" ? "white" : "black",
     });
     getAttractionInfo();
   }, []);

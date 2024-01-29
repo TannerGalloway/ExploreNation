@@ -9,16 +9,16 @@ import mapStyleLight from "../utils/mapStyleLight.json";
 import { AppContext } from "../utils/AppContext";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 
-export default function Map({ route, navigation }) {
+export default function Map({ navigation, route }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const styles = getStyles(theme);
   const { currentLocation, setScreenData } = useContext(AppContext);
   const apiCallInProgress = useRef(false);
   const apiResController = useRef(null);
   const [attractionLocations, setAttractionLocations] = useState([]);
   const [attractionCardShown, setAttractionCardShown] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const styles = getStyles(theme);
   const errorImg = require("../assets/images/error_loading.jpg");
   const [region, setRegion] = useState({
     latitude: route.params != undefined ? route.params.destination_lat : currentLocation != null ? currentLocation.location.coords.latitude : 0,
@@ -66,7 +66,7 @@ export default function Map({ route, navigation }) {
           const regionAttrations = await regionAttrationsResponse.json();
 
           for (let i = 0; i < regionAttrations.results.length; i++) {
-            // Retrieve image of attraction.
+            // Retrieve attraction thumbnail.
             if (regionAttrations.results[i].photos != undefined) {
               const attractionImg = await fetch(
                 `https://maps.googleapis.com/maps/api/place/photo?photoreference=${regionAttrations.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
@@ -112,14 +112,9 @@ export default function Map({ route, navigation }) {
           }
         }
       } catch (error) {
+        apiCallInProgress.current = false;
         alert("An Error has occured, please try again.");
-        console.error(error);
-        if (error.name == "AbortError") {
-          apiCallInProgress.current = false;
-        } else {
-          apiCallInProgress.current = false;
-          alert("An Error has occured, please try again.");
-        }
+        return;
       }
 
       apiCallInProgress.current = false;
@@ -128,7 +123,7 @@ export default function Map({ route, navigation }) {
     }
   };
 
-  // Modify the string input and return the city and country from the inputed string.
+  // Modify the string input and return the city and country from the string parameter.
   const getCityCountry = (locationStr) => {
     const regex = /\d+|[+]|\+/;
     let modLocationStr = "";
@@ -186,7 +181,7 @@ export default function Map({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       navigation.setOptions({
-        headerTintColor: mode == "light" ? "black" : "white",
+        headerTintColor: mode == "dark" ? "white" : "black",
       });
 
       // When leaving the screen, cancel any api requests that are currently in progress.

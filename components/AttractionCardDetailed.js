@@ -6,9 +6,9 @@ import { AppContext } from "../utils/AppContext";
 
 export default function AttractionCardDetailed({ navigation, details }) {
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const width = useWindowDimensions().width;
   const { setScreenData } = useContext(AppContext);
-  const styles = getStyles(theme);
 
   const formatRating = (number) => {
     const formatter = Intl.NumberFormat("en", { notation: "compact" });

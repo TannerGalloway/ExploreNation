@@ -41,7 +41,6 @@ export default function Welcome({ navigation }) {
     return () => clearTimeout(delay);
   }, [currentImageIndex1, currentImageIndex2]);
 
-  // Fade Out Function Animation
   const fadeOut = () => {
     // 2 Animations for both rendered images.
     Animated.parallel([

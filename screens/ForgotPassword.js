@@ -13,10 +13,10 @@ const validationSchema = Yup.object({
 
 export default function ForgotPassword({ navigation }) {
   const { theme } = useTheme();
-  const email_icon = require("../assets/images/email_icon.png");
-  const [loading, setloading] = useState(false);
   const styles = getStyles(theme);
+  const [loading, setloading] = useState(false);
   const { statusBarStyle } = useContext(AppContext);
+  const email_icon = require("../assets/images/email_icon.png");
 
   const handleSubmit = (values) => {
     alert(`Submitting: ${JSON.stringify(values)}`);

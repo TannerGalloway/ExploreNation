@@ -11,6 +11,7 @@ import AttractionCardDetailed from "../components/AttractionCardDetailed";
 export default function DestinationDetails({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
+  const styles = getStyles(theme);
   const apiResController = useRef(null);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
@@ -20,7 +21,6 @@ export default function DestinationDetails({ navigation }) {
   const [destinationDataLoading, setDestinationDataLoading] = useState(true);
   const [attractionDataLoading, SetAttractionDataLoading] = useState(true);
   const { screenData, setScreenData, tempDisplay } = useContext(AppContext);
-  const styles = getStyles(theme);
   let destinationImgData = [];
   let popAttractionData = [];
   let destinationInfo = {};
@@ -114,11 +114,12 @@ export default function DestinationDetails({ navigation }) {
         }
       }
 
-      // Get the language spoken, currency, capital and flag of the country or selected city.
+      // Get the language spoken, currency used, capital and flag of the country or selected city.
       const countryDetailsRes = await fetch(`https://restcountries.com/v3.1/name/${destinationInfo.country}`, {
         signal: apiResController.current.signal,
       });
       const countryDetails = await countryDetailsRes.json();
+
       if (!countryDetailsRes.ok) {
         destinationInfo.language = "Unknown";
         destinationInfo.currency = "Unknown";
@@ -167,8 +168,8 @@ export default function DestinationDetails({ navigation }) {
       destinationInfo.flag = require("../assets/images/error_loading.jpg");
       destinationInfo.weatherIcon = require("../assets/images/weather_error.png");
       alert("An Error has occured, please try again.");
-      console.error(error);
     }
+
     setDestinationData(destinationInfo);
     setDestinationDataLoading(false);
   };
@@ -183,7 +184,7 @@ export default function DestinationDetails({ navigation }) {
 
       if (popAttaction.status == "OK") {
         for (let i = 0; i < popAttaction.results.length; i++) {
-          // Get thumbnail of each attraction.
+          // Get the thumbnail of each attraction returned from the api.
           if (popAttaction.results[i].photos != undefined) {
             const attImageResponse = await fetch(
               `https://maps.googleapis.com/maps/api/place/photo?photoreference=${popAttaction.results[i].photos[0].photo_reference}&maxheight=200&key=${GOOGLE_PLACES_API_KEY}`,
@@ -210,7 +211,6 @@ export default function DestinationDetails({ navigation }) {
     } catch (error) {
       popAttractionData = attDataErrorObj;
       alert("An Error has occured, please try again.");
-      console.error(error);
     }
 
     setAttractionData(popAttractionData);
@@ -225,9 +225,9 @@ export default function DestinationDetails({ navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: mode == "light" ? "white" : "#101d23",
+        backgroundColor: mode == "dark" ? "#101d23" : "white",
       },
-      headerTintColor: mode == "light" ? "black" : "white",
+      headerTintColor: mode == "dark" ? "white" : "black",
     });
     getDestinationInfo();
     getDestinationAttractionInfo();
@@ -295,7 +295,7 @@ export default function DestinationDetails({ navigation }) {
               />
             </View>
 
-            {/* City Heading */}
+            {/* Country/City Heading */}
             <View style={styles.headingView}>
               <View style={{ width: width / 2 }}>
                 <Text style={styles.headingText}>{screenData.destination_isCountry ? destinationData.countryFullName : destinationData.city}</Text>
@@ -314,7 +314,7 @@ export default function DestinationDetails({ navigation }) {
               </View>
             </View>
 
-            {/* City Overview */}
+            {/* Country/City Overview */}
             <Text style={[styles.headingText, styles.topSpacing]}>Overview</Text>
             <View style={[styles.headingView, styles.topSpacing]}>
               <View>

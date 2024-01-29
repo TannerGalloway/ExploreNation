@@ -24,10 +24,10 @@ const validationSchema = Yup.object({
 export default function PasswordSettings({ navigation }) {
   const { theme } = useTheme();
   const { mode } = useThemeMode();
-  const [loading, setloading] = useState(false);
   const styles = getStyles(theme);
+  const [loading, setloading] = useState(false);
 
-  // Submit form to server.
+  // Submit form to database.
   const handleSubmit = async (values) => {
     setloading(true);
     const { error } = await supabase.auth.updateUser({
@@ -35,8 +35,8 @@ export default function PasswordSettings({ navigation }) {
     });
 
     if (error) {
-      alert(error.message);
       setloading(false);
+      alert("An Error has occured, please try again.");
     }
 
     values.password = "";
@@ -47,9 +47,9 @@ export default function PasswordSettings({ navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: mode == "light" ? "white" : "#101d23",
+        backgroundColor: mode == "dark" ? "#101d23" : "white",
       },
-      headerTintColor: mode == "light" ? "black" : "white",
+      headerTintColor: mode == "dark" ? "white" : "black",
     });
   }, []);
 
@@ -58,7 +58,7 @@ export default function PasswordSettings({ navigation }) {
       initialValues={{ password: "", passwordConfirm: "" }}
       validateOnMount={true}
       validationSchema={validationSchema}
-      validateOnChange={false}
+      validateOnChange={true}
       onSubmit={handleSubmit}>
       {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
         <View style={styles.container}>

@@ -13,6 +13,7 @@ import AccountIconModal from "../components/AccountIconModal";
 
 export default function Home({ navigation }) {
   const { theme } = useTheme();
+  const styles = getStyles(theme);
   const accountIconModalRef = useRef(null);
   const searchbarRef = useRef(null);
   const screenFirstVisit = useRef(true);
@@ -27,7 +28,6 @@ export default function Home({ navigation }) {
   const { setScreenData, setCurrentLocation, username, setUsername, setProfilePic, statusBarStyle } = useContext(AppContext);
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
-  const styles = getStyles(theme);
   const errorImg = require("../assets/images/error_loading.jpg");
   let attTimeout = null;
   let locationErrorMsg = "Unable to locate attractions nearby. \nMake sure your Location Services are turned on.";
@@ -45,10 +45,11 @@ export default function Home({ navigation }) {
 
     if (error) {
       setProfilePic(`https://ui-avatars.com/api/?name=${defaultUserName}`);
+    } else {
+      setProfilePic(data[0].profilePic_uri);
     }
 
     setUsername(data[0].username);
-    setProfilePic(data[0].profilePic_uri);
   };
 
   const greeting = () => {
@@ -86,7 +87,7 @@ export default function Home({ navigation }) {
       if (countryResponse.ok) {
         const countryData = await countryResponse.json();
 
-        // Randomly Select 6 coutries and cities. Ignoring any countries that contains no cities.
+        // Randomly Select 6 coutries and cities. Ignoring any countries that contain no cities.
         for (let i = 0; i < 6; i++) {
           cityImgIndex = 0;
           let randCountryDataIndex = genRandNum(countryData.data.length);
@@ -125,7 +126,7 @@ export default function Home({ navigation }) {
           if (cityDataResponse.ok) {
             const cityResData = await cityDataResponse.json();
             if (cityResData.status == "OK") {
-              // If the data returned contains more than 1 images, randomly select 1 of the images and check for empty data before changing the data index.
+              // If the data returned contains more than 1 image, randomly select 1 of the images and check for empty data before changing the data index.
               if (cityResData.candidates.length > 1) {
                 cityImgIndex = genRandNum(cityResData.candidates.length);
 
@@ -163,7 +164,6 @@ export default function Home({ navigation }) {
       }
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
     }
 
     citySectionLoading = false;
@@ -231,7 +231,7 @@ export default function Home({ navigation }) {
       } else {
         const attractionResponse = await nearbyAttrationsResponse.json();
 
-        // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews, thumbnail, location(latitude, longitude, city) and attraction id.
+        // Loop through the retuned data to grab info about the attractions. Data Grabbed include the name of the attaction, overall star rating, total reviews, thumbnail, location (latitude, longitude, city) and attraction id.
         for (let i = 0; i < attractionResponse.results.length; i++) {
           if (attractionResponse.results[i].photos != undefined) {
             const attImageResponse = await fetch(
@@ -263,7 +263,6 @@ export default function Home({ navigation }) {
       }
     } catch (error) {
       alert("An Error has occured, please try again.");
-      console.error(error);
     }
 
     attSectionLoading = false;
@@ -322,6 +321,7 @@ export default function Home({ navigation }) {
       if (screenFirstVisit.current) {
         getCountryandCityInfo();
         getNearbyAttractions();
+
         // Check if the user has left the screen while data is loading.
       } else if (cityLoadingOnScreenLeave.current) {
         cityLoadingOnScreenLeave.current = false;
@@ -362,13 +362,13 @@ export default function Home({ navigation }) {
         />
       ) : null}
       <View style={styles.topElements}>
-        {/* Top Left View */}
+        {/* Top Left Header */}
         <View>
           {greeting()}
           <Text style={styles.heading}>Where do you want to go?</Text>
         </View>
 
-        {/* Top Right View */}
+        {/* Top Right Header */}
         <View style={{ marginTop: 20 }}>
           <AccountIconModal ref={accountIconModalRef} modalVisableState={modalVisability} navigation={navigation} />
         </View>

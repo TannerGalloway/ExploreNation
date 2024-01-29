@@ -24,11 +24,11 @@ const validationSchema = Yup.object({
 export default function Login({ navigation }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const globe_icon = require("../assets/images/icon.png");
   const [loading, setloading] = useState(false);
   const { statusBarStyle } = useContext(AppContext);
+  const globe_icon = require("../assets/images/icon.png");
 
-  // Submit form to server.
+  // Submit form to database.
   const handleSubmit = async (values) => {
     setloading(true);
 
@@ -38,8 +38,8 @@ export default function Login({ navigation }) {
     });
 
     if (error) {
-      alert(error.message);
       setloading(false);
+      alert("An Error has occured, please try again.");
     }
   };
 
@@ -50,7 +50,7 @@ export default function Login({ navigation }) {
         initialValues={{ email: "", password: "" }}
         validateOnMount={true}
         validationSchema={validationSchema}
-        validateOnChange={true}
+        validateOnChange={false}
         onSubmit={handleSubmit}>
         {({ handleChange, handleSubmit, handleBlur, values, errors, isValid, isSubmitting }) => (
           <View style={styles.container}>
